@@ -15,6 +15,10 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+private slots:
+
+    void on_cmdLineEdit_blockCountChanged(int newBlockCount);
+
 private:
     Ui::MainWindow *ui;
 };
