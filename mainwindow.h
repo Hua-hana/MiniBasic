@@ -19,6 +19,8 @@ private slots:
 
     void on_cmdLineEdit_blockCountChanged(int newBlockCount);
 
+    void on_btnClearCode_clicked();
+
 private:
     Ui::MainWindow *ui;
 };

@@ -17,6 +17,7 @@ MainWindow::~MainWindow()
 //input a string, get the line number
 int getLineNum(QString &str){
     QString num_str=str.section(" ",0,0);
+    if(num_str=="")num_str=str;
     int ret=num_str.toInt();
     if(ret)return ret;//success
     else return -1;//convert fail
@@ -24,8 +25,8 @@ int getLineNum(QString &str){
 
 //the empty command, e.g. 100
 bool emptycmd(QString &str){
-    QStringList strlist=str.split(" ");
-    if(strlist.length()<2)return true;
+    QString cmd_str=str.section(" ",1,1);
+    if(cmd_str=="")return true;
     else return false;
 }
 
@@ -39,7 +40,7 @@ void MainWindow::on_cmdLineEdit_blockCountChanged(int newBlockCount)
     QTextBlock blocktext=doc->findBlockByNumber(curBlockCount-1);
     bool empty_cmd=false;
     QString str=blocktext.text()+"\n";
-    if(emptycmd(str))empty_cmd=true; //empty command
+    empty_cmd=emptycmd(str); //empty command
 
     //insert in codeDisplay
     //binary search
@@ -47,11 +48,13 @@ void MainWindow::on_cmdLineEdit_blockCountChanged(int newBlockCount)
     int low=0;
     int high=ui->codeDisplay->document()->blockCount()-1;
     bool replace=false;//bring out of while loop
+    auto Displaydoc=ui->codeDisplay->document();
     while(low<high){
         int mid=(low+high)>>1;
-        QTextBlock midblock=doc->findBlockByNumber(mid);
+        QTextBlock midblock=Displaydoc->findBlockByNumber(mid);
         QString str_mid=midblock.text();
-        int mid_line=getLineNum(str_mid);//wrong! cannot get 200 line number,no " "
+        int mid_line=getLineNum(str_mid);
+        //if(mid_line==-1);//TODO convert fail
         if(line<mid_line)high=mid;
         else if(line>mid_line)low=mid+1;
         else {replace=true;high=mid;break;}
@@ -70,7 +73,7 @@ void MainWindow::on_cmdLineEdit_blockCountChanged(int newBlockCount)
         ui->codeDisplay->setTextCursor(cursor);
         if(!empty_cmd)ui->codeDisplay->insertPlainText(str);
     }
-    else{
+    else if(!empty_cmd){
         cursor.movePosition(QTextCursor::Down,QTextCursor::MoveAnchor,high);
         ui->codeDisplay->setTextCursor(cursor);
         ui->codeDisplay->insertPlainText(str);
@@ -79,3 +82,8 @@ void MainWindow::on_cmdLineEdit_blockCountChanged(int newBlockCount)
 
 
 
+//clear the code
+void MainWindow::on_btnClearCode_clicked()
+{
+    ui->codeDisplay->clear();
+}
