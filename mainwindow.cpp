@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include <QTextBlock>
 #include<QString>
+#include<QFileDialog>
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -30,20 +31,11 @@ bool emptycmd(QString &str){
     else return false;
 }
 
-//enter a command the "enter key"
-//codeDisplay will be updated
-void MainWindow::on_cmdLineEdit_blockCountChanged(int newBlockCount)
-{
-    //get the updated line
-    int curBlockCount=newBlockCount-1;
-    QTextDocument* doc=ui->cmdLineEdit->document();
-    QTextBlock blocktext=doc->findBlockByNumber(curBlockCount-1);
+//insert a cmd in codeDisplay
+//error do nothing
+void insert_cmd(Ui::MainWindow* ui,QString& str){
     bool empty_cmd=false;
-    QString str=blocktext.text()+"\n";
     empty_cmd=emptycmd(str); //empty command
-
-    //insert in codeDisplay
-    //binary search
     int line=getLineNum(str);
     int low=0;
     int high=ui->codeDisplay->document()->blockCount()-1;
@@ -81,9 +73,50 @@ void MainWindow::on_cmdLineEdit_blockCountChanged(int newBlockCount)
 }
 
 
+//enter a command the "enter key"
+//codeDisplay will be updated
+void MainWindow::on_cmdLineEdit_blockCountChanged(int newBlockCount)
+{
+    //get the updated line
+    int curBlockCount=newBlockCount-1;
+    QTextDocument* doc=ui->cmdLineEdit->document();
+    QTextBlock blocktext=doc->findBlockByNumber(curBlockCount-1);
+    QString str=blocktext.text()+"\n";
+
+    //insert cmd
+    insert_cmd(ui,str);
+}
+
+
 
 //clear the code
 void MainWindow::on_btnClearCode_clicked()
 {
     ui->codeDisplay->clear();
+}
+
+// load the code file
+void MainWindow::on_btnLoadCode_clicked()
+{
+    QFileDialog *f=new QFileDialog(this);
+    f->setWindowTitle("select the code");
+    f->setViewMode(QFileDialog::Detail);
+
+    //select file
+    QString filepath;
+    if(f->exec()){
+        auto filelist=f->selectedFiles();
+        filepath=filelist[0];
+    }
+    else return;
+
+    QFile codefile(filepath);
+    if(!codefile.open(QIODevice::ReadOnly|QIODevice::Text))return;
+
+    QTextStream textstream(&codefile);
+
+    while(!textstream.atEnd()){
+        QString str=textstream.readLine()+'\n';
+        insert_cmd(ui,str);
+    }
 }
