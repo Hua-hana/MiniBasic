@@ -10,10 +10,12 @@ CONFIG += c++11
 
 SOURCES += \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    tokenizer.cpp
 
 HEADERS += \
-    mainwindow.h
+    mainwindow.h \
+    parse.h
 
 FORMS += \
     mainwindow.ui
