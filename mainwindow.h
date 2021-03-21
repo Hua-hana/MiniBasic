@@ -23,6 +23,8 @@ private slots:
 
     void on_btnLoadCode_clicked();
 
+    void on_btnRunCode_clicked();
+
 private:
     Ui::MainWindow *ui;
 };

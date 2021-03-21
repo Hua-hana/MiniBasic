@@ -11,8 +11,8 @@ static unsigned int pcur=0;
 extern string code_text;
 
 //token attribute
-extern Token_attribute token_attr;
-static unsigned int len=code_text.length();
+Token_attribute token_attr;
+unsigned int len=code_text.length();
 tokentype number_scanner();
 
 void skip_blank();
@@ -44,7 +44,12 @@ int code_scanner(){
     }
 
     string word=word_scanner();
-    if(word=="REM")return REM;
+    if(word=="REM"){
+        int low=pcur;
+        while(pcur<len&&code_text[pcur]!='\n')++pcur;
+        token_attr.comment=code_text.substr(low,pcur).c_str();
+        return REM;
+    }
     if(word=="LET")return LET;
     if(word=="PRINT")return PRINT;
     if(word=="INPUT")return INPUT;
@@ -54,7 +59,7 @@ int code_scanner(){
     if(word=="END")return END;
 
     //FIXME identified must have rule!
-    token_attr.id=word;
+    token_attr.id=word.c_str();
     return ID;
 
 }
@@ -76,4 +81,14 @@ string word_scanner(){
     //FIXME it allow any variable!
     while(pcur<len&&!is_blank(code_text[pcur]))++pcur;
     return code_text.substr(low,pcur);
+}
+
+string lookahead1(){
+    assert(pcur+1<len);
+    return code_text.substr(pcur,1);
+}
+
+string lookahead2(){
+    assert(pcur+2<len);
+    return code_text.substr(pcur,2);
 }

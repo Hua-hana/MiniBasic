@@ -3,6 +3,17 @@
 #include <QTextBlock>
 #include<QString>
 #include<QFileDialog>
+#include<string>
+#include"parse.h"
+#include"program.h"
+
+std::string code_text;
+
+Program program;
+
+enum MachineState{WAIT_INPUT,CMDING};
+static MachineState st=CMDING;
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -77,6 +88,7 @@ void insert_cmd(Ui::MainWindow* ui,QString& str){
 //codeDisplay will be updated
 void MainWindow::on_cmdLineEdit_blockCountChanged(int newBlockCount)
 {
+    if(st==WAIT_INPUT)return;
     //get the updated line
     int curBlockCount=newBlockCount-1;
     QTextDocument* doc=ui->cmdLineEdit->document();
@@ -120,3 +132,40 @@ void MainWindow::on_btnLoadCode_clicked()
         insert_cmd(ui,str);
     }
 }
+
+//execute the code
+void MainWindow::on_btnRunCode_clicked()
+{
+    program.clear();
+    code_text=ui->codeDisplay->document()->toPlainText().toStdString();
+
+
+    //parse
+    //exec
+    //set output
+}
+
+//wait for the input
+int var_input(Ui::MainWindow* ui){
+    st=WAIT_INPUT;
+    QEventLoop loop;
+
+    ui->cmdLineEdit->insertPlainText("? ");
+
+    MainWindow::connect(ui->cmdLineEdit,SIGNAL(ui->cmdLineEdit->blockCountChanged(int)),&loop,SLOT(quit()));
+    loop.exec();
+
+    int curBlockCount=ui->cmdLineEdit->blockCount()-1;
+    QTextDocument* doc=ui->cmdLineEdit->document();
+    QTextBlock blocktext=doc->findBlockByNumber(curBlockCount-1);
+    QString str=blocktext.text()+"\n";
+    int low=0;
+    while(!(str[low]>='0'&&str[low]<='9'))++low;
+    int high=low;
+    while(str[high]>='0'&&str[high]<='9')++high;
+    int ret=std::atoi(str.toStdString().substr(low,high).c_str());
+
+    st=CMDING;
+    return ret;
+}
+
