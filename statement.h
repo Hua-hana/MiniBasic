@@ -29,7 +29,7 @@ class RemStatement:public Statement{
 private:
     string comment;
 public:
-    RemStatement(const string&str="",int line=0):Statement(line),comment(move(str)){}
+    RemStatement(string str="",int line=0):Statement(line),comment(str){}
     virtual ~RemStatement(){}
     virtual string to_ast()const;
     virtual Statement* eval(EvalContext<string,int> &)const{return next;}
@@ -63,10 +63,10 @@ class InputStatement:public Statement{
 private:
     string id;
 public:
-    InputStatement(const string&str="",int line=0):Statement(line),id(move(str)){}
+    InputStatement( string str="",int line=0):Statement(line),id(str){}
     ~InputStatement(){}
-    virtual string to_ast()const=0;
-    virtual Statement* eval(EvalContext<string,int> &state)const=0;
+    virtual string to_ast()const;
+    virtual Statement* eval(EvalContext<string,int> &state)const;
     virtual StatementType type()const{return Input;}
 };
 
@@ -76,8 +76,8 @@ private:
 public:
     GotoStatement(int nl=0,int line=0):Statement(line),next_line(nl){}
     ~GotoStatement(){}
-    virtual string to_ast()const=0;
-    virtual Statement* eval(EvalContext<string,int> &)const=0;
+    virtual string to_ast()const;
+    virtual Statement* eval(EvalContext<string,int> &)const;
     virtual StatementType type()const{return Goto;}
 };
 
@@ -87,15 +87,16 @@ private:
     string op;
     int next_line;
 public:
-    IFStatement(Expression* e1=NULL,Expression*e2=NULL,const string &op="",int nl=0,int line=0)
-        :Statement(line),exp1(e1),exp2(e2),op(move(op)),next_line(nl){}
+    IFStatement(Expression* e1=NULL,Expression*e2=NULL,string op="",int nl=0,int line=0)
+        :Statement(line),exp1(e1),exp2(e2),op(op),next_line(nl){}
     ~IFStatement(){}
-    virtual string to_ast()const=0;
-    virtual Statement* eval(EvalContext<string,int> &)const=0;
+    virtual string to_ast()const;
+    virtual Statement* eval(EvalContext<string,int> &)const;
     virtual StatementType type()const{return If;}
 };
 
 class EndStatement:public Statement{
+public:
     EndStatement(int line=0)
         :Statement(line){}
     virtual ~EndStatement(){}

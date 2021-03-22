@@ -2,6 +2,5 @@
 #define TOKENIZER_H
 #include<string>
 int code_scanner();
-std::string lookahead1();
-std::string lookahead2();
+int lookahead1();
 #endif // TOKENIZER_H

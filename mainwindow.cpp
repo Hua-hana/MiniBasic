@@ -10,7 +10,9 @@
 std::string code_text;
 
 Program program;
-
+extern string res_output;
+extern string ast;
+extern unsigned int pcur;
 enum MachineState{WAIT_INPUT,CMDING};
 static MachineState st=CMDING;
 
@@ -138,8 +140,18 @@ void MainWindow::on_btnRunCode_clicked()
 {
     program.clear();
     code_text=ui->codeDisplay->document()->toPlainText().toStdString();
+    //initial the scanner;
+    pcur=0;
 
+    parse();
+    program.exec();
+    ui->resDisplay->clear();
+    QString str=QString::fromStdString(res_output);
+    ui->resDisplay->insertPlainText(str);
 
+    str=QString::fromStdString(ast);
+    ui->treeDisplay->clear();
+    ui->treeDisplay->insertPlainText(str);
     //parse
     //exec
     //set output

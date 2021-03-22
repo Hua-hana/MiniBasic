@@ -2,7 +2,7 @@
 #define EXP_CPP
 
 #include"exp.h"
-
+#include<cmath>
 int CompoundExp::eval(EvalContext<string,int>& state)const{
     int right=rhs->eval(state);
     if(op=="="){
@@ -17,12 +17,13 @@ int CompoundExp::eval(EvalContext<string,int>& state)const{
         assert(right!=0);
         return left/right;
     }
+    if(op=="**")return pow(left,right);
     //FIXME
     return 0;
 }
 
 string CompoundExp::to_ast(string & tab)const{
-    string new_tab=tab+"\t";
+    string new_tab=tab+"    ";
     return tab+op+"\n"+lhs->to_ast(new_tab)+"\n"+rhs->to_ast(new_tab);
 }
 

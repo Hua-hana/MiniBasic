@@ -33,11 +33,11 @@ enum tokentype{
 #define ID 267
 #define ERROR 268
 #define EXPO 269
-typedef union Token_attribute{
+typedef struct Token_attribute{
     int num;
-    const char* id;
-    const char* error_msg;
-    const char* comment;
+    string id;
+    string error_msg;
+    string comment;
 } Token_attribute;
 
 extern Token_attribute token_attr;

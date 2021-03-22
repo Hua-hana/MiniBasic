@@ -4,7 +4,7 @@
 extern int var_input(Ui::MainWindow*ui);
 extern int input_ret;
 string RemStatement::to_ast()const{
-    return to_string(line)+" REM\n\t"+comment+"\n";
+    return to_string(line)+" REM\n  "+comment+"\n";
 }
 
 string LetStatement::to_ast() const{
@@ -47,7 +47,7 @@ Statement* GotoStatement::eval(EvalContext<string, int> &) const{
 }
 
 string IFStatement::to_ast() const{
-    string tab="\t";
+    string tab="    ";
     return to_string(line)+" IF THEN "+exp1->to_ast(tab)+"\n"
     +tab+op+exp2->to_ast(tab)+"\n"
     +tab+to_string(next_line)+"\n";

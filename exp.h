@@ -46,7 +46,7 @@ class IdentifierExp:public Expression{
 private:
     string id;
 public:
-    IdentifierExp(const string &str=""):id(move(str)){}
+    IdentifierExp(string str=""):id(str){}
     ~IdentifierExp(){}
     virtual int eval(EvalContext<string,int>&st)const{
         //FIXME
@@ -69,8 +69,8 @@ private:
     Expression* lhs,*rhs;
     string  op;
 public:
-    CompoundExp(Expression* lhs=NULL,Expression*rhs=NULL,const string& op=""):
-        lhs(lhs),rhs(rhs),op(move(op)){}
+    CompoundExp(Expression* lhs=NULL,Expression*rhs=NULL,string op=""):
+        lhs(lhs),rhs(rhs),op(op){}
     ~CompoundExp(){}
     virtual int eval(EvalContext<string,int>& state)const;
     virtual string to_ast(string & tab)const;

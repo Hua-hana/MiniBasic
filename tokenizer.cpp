@@ -5,14 +5,14 @@
 using namespace std;
 
 //curent pointer
-static unsigned int pcur=0;
+unsigned int pcur=0;
 
 //code text
 extern string code_text;
 
 //token attribute
 Token_attribute token_attr;
-unsigned int len=code_text.length();
+unsigned int len;
 tokentype number_scanner();
 
 void skip_blank();
@@ -20,21 +20,24 @@ void skip_blank();
 string word_scanner();
 
 bool is_blank(const char & c){
-    return  c=='\n'||c=='\t'||c=='\b'||c=='\f';
+    return  c==' '||c=='\n'||c=='\t';
+}
+bool is_letter(char c){
+    return (c>='a'&&c<='z')||(c>='A'&&c<'Z')||c=='_';
 }
 
 
-
 int code_scanner(){
+    len=code_text.length();
     skip_blank();
     if(pcur>=len){
-        token_attr.error_msg="reaching the end of code";
-        return ERROR;
+        //end of code
+        return 0;
     }
     char c=code_text[pcur];
 
     if(c>='0'&&c<='9')return number_scanner();
-    if(c=='+'||'*'||'-'||'/'||'('||')'||'='){
+    if(c=='+'||c=='*'||c=='-'||c=='/'||c=='('||c==')'||c=='='){
         if(c=='*'&&pcur+1<len&&code_text[pcur+1]=='*'){
             pcur+=2;
             return EXPO;
@@ -47,7 +50,8 @@ int code_scanner(){
     if(word=="REM"){
         int low=pcur;
         while(pcur<len&&code_text[pcur]!='\n')++pcur;
-        token_attr.comment=code_text.substr(low,pcur).c_str();
+        //careful for the deconstruct!
+        token_attr.comment=code_text.substr(low,pcur-low);
         return REM;
     }
     if(word=="LET")return LET;
@@ -57,10 +61,14 @@ int code_scanner(){
     if(word=="IF")return IF;
     if(word=="THEN")return THEN;
     if(word=="END")return END;
+    else {
+        //FIXME identified must have rule!
+        token_attr.id=word;
+        return ID;
+    }
 
-    //FIXME identified must have rule!
-    token_attr.id=word.c_str();
-    return ID;
+    token_attr.error_msg="unknown error";
+    return ERROR;
 
 }
 
@@ -76,19 +84,20 @@ void skip_blank(){
         ++pcur;
 }
 
+
+
 string word_scanner(){
     int low=pcur;
-    //FIXME it allow any variable!
-    while(pcur<len&&!is_blank(code_text[pcur]))++pcur;
-    return code_text.substr(low,pcur);
+    while(pcur<len&&is_letter(code_text[pcur]))++pcur;
+    return code_text.substr(low,pcur-low);
 }
 
-string lookahead1(){
-    assert(pcur+1<len);
-    return code_text.substr(pcur,1);
+int lookahead1(){
+    int pcur_tmp=pcur;
+    assert(pcur<len);
+    int ret=code_scanner();
+    pcur=pcur_tmp;
+    return ret;
 }
 
-string lookahead2(){
-    assert(pcur+2<len);
-    return code_text.substr(pcur,2);
-}
+
