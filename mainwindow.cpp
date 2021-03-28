@@ -22,7 +22,7 @@ static MachineState st=CMDING;
 //used for input blocking
 QWaitCondition cond;
 QMutex mut;
-
+//QMutex cmd_mutex;
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -97,6 +97,7 @@ void insert_cmd(Ui::MainWindow* ui,QString& str){
 //codeDisplay will be updated
 void MainWindow::on_cmdLineEdit_blockCountChanged(int newBlockCount)
 {
+
     if(st==WAIT_INPUT){
         cond.wakeAll();
         return;
@@ -109,6 +110,7 @@ void MainWindow::on_cmdLineEdit_blockCountChanged(int newBlockCount)
 
     //insert cmd
     insert_cmd(ui,str);
+
 }
 
 
@@ -212,6 +214,7 @@ void ExecThread::run(){
 
 
     parse();
+    program.generate_ast();
     program.exec();
 
     emit send_res_output(res_output);

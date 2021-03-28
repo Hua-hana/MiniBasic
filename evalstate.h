@@ -14,7 +14,7 @@ public:
     EvalContext(){}
     ~EvalContext(){}
     void add(const K &k,V v){
-        state.insert(pair<K,V>(k,v));
+        state.insert_or_assign(k,v);
     }
 
     V get(const K& k) const{

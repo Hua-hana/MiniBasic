@@ -20,6 +20,7 @@ public:
     Statement(int line=0):next(NULL),line(line){}
     virtual ~Statement(){}
     void set_next(Statement*n){next=n;}
+    Statement* get_next(){return next;}
     virtual string to_ast()const=0;
     virtual Statement* eval(EvalContext<string,int> &state)const=0;
     virtual StatementType type()const=0;
@@ -72,9 +73,9 @@ public:
 
 class GotoStatement:public Statement{
 private:
-    int next_line;
+    int goto_line;
 public:
-    GotoStatement(int nl=0,int line=0):Statement(line),next_line(nl){}
+    GotoStatement(int nl=0,int line=0):Statement(line),goto_line(nl){}
     ~GotoStatement(){}
     virtual string to_ast()const;
     virtual Statement* eval(EvalContext<string,int> &)const;
@@ -85,10 +86,10 @@ class IFStatement:public Statement{
 private:
     Expression*exp1,*exp2;
     string op;
-    int next_line;
+    int goto_line;
 public:
     IFStatement(Expression* e1=NULL,Expression*e2=NULL,string op="",int nl=0,int line=0)
-        :Statement(line),exp1(e1),exp2(e2),op(op),next_line(nl){}
+        :Statement(line),exp1(e1),exp2(e2),op(op),goto_line(nl){}
     ~IFStatement(){}
     virtual string to_ast()const;
     virtual Statement* eval(EvalContext<string,int> &)const;

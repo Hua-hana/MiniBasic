@@ -39,18 +39,18 @@ Statement* InputStatement::eval(EvalContext<string, int> &state) const{
 }
 
 string GotoStatement::to_ast() const{
-    return to_string(line)+" GOTO "+to_string(next_line)+"\n";
+    return to_string(line)+" GOTO "+to_string(goto_line)+"\n";
 }
 
 Statement* GotoStatement::eval(EvalContext<string, int> &) const{
-    return program.get(next_line);
+    return program.get(goto_line);
 }
 
 string IFStatement::to_ast() const{
     string tab="    ";
-    return to_string(line)+" IF THEN "+exp1->to_ast(tab)+"\n"
-    +tab+op+exp2->to_ast(tab)+"\n"
-    +tab+to_string(next_line)+"\n";
+    return to_string(line)+" IF THEN\n"+tab+op+"\n"+exp1->to_ast(tab)+"\n"
+    +exp2->to_ast(tab)+"\n"
+    +tab+to_string(goto_line)+"\n";
 }
 
 Statement* IFStatement::eval(EvalContext<string, int> &state) const{
@@ -63,5 +63,5 @@ Statement* IFStatement::eval(EvalContext<string, int> &state) const{
     else if(op=="=")comp=left==right;
 
     if(comp)return next;
-    else return program.get(next_line);
+    else return program.get(goto_line);
 }

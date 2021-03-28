@@ -73,7 +73,7 @@ void parse_statement(int line){
         assert(token_t==THEN);
         token_t=code_scanner();
         assert(token_t==NUM);
-        Statement* stmt=new IFStatement(lhs,rhs,op,token_attr.num);
+        Statement* stmt=new IFStatement(lhs,rhs,op,token_attr.num,line);
         if(pre)pre->set_next(stmt);
         program.insert(line,stmt);
         pre=stmt;

@@ -27,7 +27,7 @@ public:
     void set_ui(Ui::MainWindow*u){ui=u;}
     Ui::MainWindow* get_ui(){return ui;}
     void exec();
-
+    void generate_ast();
     void clear(){
         bitmap.clear();
     }

@@ -25,6 +25,9 @@ bool is_blank(const char & c){
 bool is_letter(char c){
     return (c>='a'&&c<='z')||(c>='A'&&c<'Z')||c=='_';
 }
+bool is_digit(char c){
+    return (c>='0'&&c<='9');
+}
 
 
 int code_scanner(){
@@ -37,7 +40,7 @@ int code_scanner(){
     char c=code_text[pcur];
 
     if(c>='0'&&c<='9')return number_scanner();
-    if(c=='+'||c=='*'||c=='-'||c=='/'||c=='('||c==')'||c=='='){
+    if(c=='+'||c=='*'||c=='-'||c=='/'||c=='('||c==')'||c=='='||c=='>'||c=='<'){
         if(c=='*'&&pcur+1<len&&code_text[pcur+1]=='*'){
             pcur+=2;
             return EXPO;
@@ -88,7 +91,7 @@ void skip_blank(){
 
 string word_scanner(){
     int low=pcur;
-    while(pcur<len&&is_letter(code_text[pcur]))++pcur;
+    while(pcur<len&&(is_letter(code_text[pcur])||is_digit(code_text[pcur])))++pcur;
     return code_text.substr(low,pcur-low);
 }
 
