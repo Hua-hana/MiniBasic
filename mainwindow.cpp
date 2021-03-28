@@ -8,6 +8,8 @@
 #include"parse.h"
 #include"program.h"
 #include<ExecThread.h>
+#include <QWaitCondition>
+#include <QMutex>
 std::string code_text;
 
 Program program;
@@ -16,6 +18,10 @@ extern string ast;
 extern unsigned int pcur;
 enum MachineState{WAIT_INPUT,CMDING};
 static MachineState st=CMDING;
+
+//used for input blocking
+QWaitCondition cond;
+QMutex mut;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -91,7 +97,10 @@ void insert_cmd(Ui::MainWindow* ui,QString& str){
 //codeDisplay will be updated
 void MainWindow::on_cmdLineEdit_blockCountChanged(int newBlockCount)
 {
-    if(st==WAIT_INPUT)return;
+    if(st==WAIT_INPUT){
+        cond.wakeAll();
+        return;
+    }
     //get the updated line
     int curBlockCount=newBlockCount-1;
     QTextDocument* doc=ui->cmdLineEdit->document();
@@ -150,24 +159,31 @@ void MainWindow::on_btnRunCode_clicked()
     thread->set_ui(ui);
     thread->start();
 
-
-
-
     //parse
     //exec
     //set output
 }
 
 //wait for the input
-int var_input(Ui::MainWindow* ui){
+int var_input(Ui::MainWindow*ui){
     st=WAIT_INPUT;
-    QEventLoop loop;
+    //QEventLoop loop;
 
     ui->cmdLineEdit->insertPlainText("? ");
 
-    QTimer::singleShot(3000,&loop,SLOT(quit()));
-    //loop.connect(ui->cmdLineEdit,SIGNAL(blockCountChanged(int)),&loop,SLOT(loop.exit()));
-    loop.exec();
+    mut.lock();
+    cond.wait(&mut);
+    mut.unlock();
+
+
+
+    //QTimer::singleShot(3000,&loop,SLOT(quit()));
+    //loop.connect(ui->cmdLineEdit,SIGNAL(ui->cmdLineEdit->blockCountChanged),&loop,SLOT(loop.exit()));
+    //loop.connect(ui,SIGNAL(input_finished),&loop,SLOT(quit()));
+
+    //connect(this,&MainWindow::input_finished,&loop,&QEventLoop::quit);
+    //loop.exec();
+
 
     int curBlockCount=ui->cmdLineEdit->blockCount()-1;
     QTextDocument* doc=ui->cmdLineEdit->document();
