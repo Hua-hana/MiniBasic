@@ -4,9 +4,10 @@
 #include<QString>
 #include<QFileDialog>
 #include<string>
+#include<QTimer>
 #include"parse.h"
 #include"program.h"
-
+#include<ExecThread.h>
 std::string code_text;
 
 Program program;
@@ -138,20 +139,20 @@ void MainWindow::on_btnLoadCode_clicked()
 //execute the code
 void MainWindow::on_btnRunCode_clicked()
 {
-    program.clear();
-    code_text=ui->codeDisplay->document()->toPlainText().toStdString();
-    //initial the scanner;
-    pcur=0;
 
-    parse();
-    program.exec();
-    ui->resDisplay->clear();
-    QString str=QString::fromStdString(res_output);
-    ui->resDisplay->insertPlainText(str);
+    ExecThread *thread=new ExecThread(NULL);
+    connect(thread,&QThread::finished
+                ,thread,&QObject::deleteLater);
+    connect(thread,&ExecThread::send_res_output,
+            this,&MainWindow::set_res_output);
+    connect(thread,&ExecThread::send_ast,
+            this,&MainWindow::set_ast);
+    thread->set_ui(ui);
+    thread->start();
 
-    str=QString::fromStdString(ast);
-    ui->treeDisplay->clear();
-    ui->treeDisplay->insertPlainText(str);
+
+
+
     //parse
     //exec
     //set output
@@ -164,7 +165,8 @@ int var_input(Ui::MainWindow* ui){
 
     ui->cmdLineEdit->insertPlainText("? ");
 
-    MainWindow::connect(ui->cmdLineEdit,SIGNAL(ui->cmdLineEdit->blockCountChanged(int)),&loop,SLOT(quit()));
+    QTimer::singleShot(3000,&loop,SLOT(quit()));
+    //loop.connect(ui->cmdLineEdit,SIGNAL(blockCountChanged(int)),&loop,SLOT(loop.exit()));
     loop.exec();
 
     int curBlockCount=ui->cmdLineEdit->blockCount()-1;
@@ -179,5 +181,38 @@ int var_input(Ui::MainWindow* ui){
 
     st=CMDING;
     return ret;
+}
+
+void ExecThread::run(){
+    /*begin of ui operation*/
+    program.clear();
+    code_text=ui->codeDisplay->document()->toPlainText().toStdString();
+    //initial the scanner;
+    pcur=0;
+    //set the ui in program
+    program.set_ui(ui);
+
+    /*end of ui operation */
+
+
+    parse();
+    program.exec();
+
+    emit send_res_output(res_output);
+    emit send_ast(ast);
+
+}
+
+void MainWindow::set_res_output(string res){
+    /*begin of ui operation*/
+    ui->resDisplay->clear();
+    QString str=QString::fromStdString(res);
+    ui->resDisplay->insertPlainText(str);
+}
+
+void MainWindow::set_ast(string ast_res){
+    QString str=QString::fromStdString(ast_res);
+    ui->treeDisplay->clear();
+    ui->treeDisplay->insertPlainText(str);
 }
 

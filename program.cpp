@@ -8,8 +8,7 @@ void Program::exec(){
     ast="";
 
     EvalContext<string,int> state;
-    int size=bitmap.size();
-
+    //int size=bitmap.size();
     auto cur=bitmap.begin()->second;
 
     while(cur){

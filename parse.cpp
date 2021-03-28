@@ -63,12 +63,12 @@ void parse_statement(int line){
     }
     else if(token_t==IF){
         parse_exp();
-        Expression* lhs=get_parse_exp();
+        Expression* rhs=get_parse_exp();
         token_t=code_scanner();
         assert(token_t=='<'||token_t=='='||token_t=='>');
         string op=optoken_to_string(token_t);
         parse_exp();
-        Expression* rhs=get_parse_exp();
+        Expression* lhs=get_parse_exp();
         token_t=code_scanner();
         assert(token_t==THEN);
         token_t=code_scanner();
@@ -150,10 +150,10 @@ void comsume_the_stack(){
         assert(isop(top_op));
         op_stack.pop();
         assert(!exp_stack.empty());
-        Expression* lhs=exp_stack.top();
+        Expression* rhs=exp_stack.top();
         exp_stack.pop();
         assert(!exp_stack.empty());
-        Expression*rhs=exp_stack.top();
+        Expression*lhs=exp_stack.top();
         exp_stack.pop();
         Expression* compound=new CompoundExp(lhs,rhs,optoken_to_string(top_op));
         exp_stack.emplace(compound);
@@ -165,6 +165,8 @@ void parse_exp(){
     int token_t=lookahead1();
     if(!isop(token_t)){
         //Careful!!
+        // not the end of expression
+        if(token_t==')')return;
         comsume_the_stack();
         assert(exp_stack.size()==1);
         return;
@@ -173,18 +175,19 @@ void parse_exp(){
     if(token_t=='+'){
         if(op_stack.empty())op_stack.emplace(token_t);
         else {
-            int top_op=op_stack.top();
-            while(!op_stack.empty()&&isop(top_op)){
+            while(!op_stack.empty()){
+                int top_op=op_stack.top();
+                if(!isop(top_op))break;
                 op_stack.pop();
                 assert(!exp_stack.empty());
-                Expression* lhs=exp_stack.top();
+                Expression* rhs=exp_stack.top();
                 exp_stack.pop();
                 assert(!exp_stack.empty());
-                Expression*rhs=exp_stack.top();
+                Expression*lhs=exp_stack.top();
                 exp_stack.pop();
                 Expression* compound=new CompoundExp(lhs,rhs,optoken_to_string(top_op));
                 exp_stack.emplace(compound);
-                top_op=op_stack.top();
+                //if(!op_stack.empty())top_op=op_stack.top();
             }
             op_stack.emplace(token_t);
         }
@@ -193,18 +196,19 @@ void parse_exp(){
     else if(token_t=='-'){
         if(op_stack.empty())op_stack.emplace(token_t);
         else {
-            int top_op=op_stack.top();
-            while(!op_stack.empty()&&isop(top_op)){
+            while(!op_stack.empty()){
+                int top_op=op_stack.top();
+                if(!isop(top_op))break;
                 op_stack.pop();
                 assert(!exp_stack.empty());
-                Expression* lhs=exp_stack.top();
+                Expression* rhs=exp_stack.top();
                 exp_stack.pop();
                 assert(!exp_stack.empty());
-                Expression*rhs=exp_stack.top();
+                Expression*lhs=exp_stack.top();
                 exp_stack.pop();
                 Expression* compound=new CompoundExp(lhs,rhs,optoken_to_string(top_op));
                 exp_stack.emplace(compound);
-                top_op=op_stack.top();
+                //top_op=op_stack.top();
             }
             op_stack.emplace(token_t);
         }
@@ -212,24 +216,20 @@ void parse_exp(){
     else if(token_t=='*'){
         if(op_stack.empty())op_stack.emplace(token_t);
         else {
-            int top_op=op_stack.top();
-            if(isop(top_op)){
-                if(precedence_less(top_op,token_t))op_stack.emplace(token_t);
-                else {
-                    while(!op_stack.empty()&&isop(top_op)){
-                        op_stack.pop();
-                        assert(!exp_stack.empty());
-                        Expression* lhs=exp_stack.top();
-                        exp_stack.pop();
-                        assert(!exp_stack.empty());
-                        Expression*rhs=exp_stack.top();
-                        exp_stack.pop();
-                        Expression* compound=new CompoundExp(lhs,rhs,optoken_to_string(top_op));
-                        exp_stack.emplace(compound);
-                        top_op=op_stack.top();
-                        if(isop(top_op)&&precedence_less(top_op,token_t))break;
-                    }
-                }
+            while(!op_stack.empty()){
+                int top_op=op_stack.top();
+                if(!isop(top_op))break;
+                if(precedence_less(top_op,token_t))break;
+                op_stack.pop();
+                assert(!exp_stack.empty());
+                Expression* rhs=exp_stack.top();
+                exp_stack.pop();
+                assert(!exp_stack.empty());
+                Expression*lhs=exp_stack.top();
+                exp_stack.pop();
+                Expression* compound=new CompoundExp(lhs,rhs,optoken_to_string(top_op));
+                exp_stack.emplace(compound);
+                //top_op=op_stack.top();
             }
             op_stack.emplace(token_t);
         }
@@ -237,24 +237,20 @@ void parse_exp(){
     else if(token_t=='/'){
         if(op_stack.empty())op_stack.emplace(token_t);
         else {
-            int top_op=op_stack.top();
-            if(isop(top_op)){
-                if(precedence_less(top_op,token_t))op_stack.emplace(token_t);
-                else {
-                    while(!op_stack.empty()&&isop(top_op)){
-                        op_stack.pop();
-                        assert(!exp_stack.empty());
-                        Expression* lhs=exp_stack.top();
-                        exp_stack.pop();
-                        assert(!exp_stack.empty());
-                        Expression*rhs=exp_stack.top();
-                        exp_stack.pop();
-                        Expression* compound=new CompoundExp(lhs,rhs,optoken_to_string(top_op));
-                        exp_stack.emplace(compound);
-                        top_op=op_stack.top();
-                        if(isop(top_op)&&precedence_less(top_op,token_t))break;
-                    }
-                }
+            while(!op_stack.empty()){
+                int top_op=op_stack.top();
+                if(!isop(top_op))break;
+                if(precedence_less(top_op,token_t))break;
+                op_stack.pop();
+                assert(!exp_stack.empty());
+                Expression* rhs=exp_stack.top();
+                exp_stack.pop();
+                assert(!exp_stack.empty());
+                Expression*lhs=exp_stack.top();
+                exp_stack.pop();
+                Expression* compound=new CompoundExp(lhs,rhs,optoken_to_string(top_op));
+                exp_stack.emplace(compound);
+                //top_op=op_stack.top();
             }
             op_stack.emplace(token_t);
         }
@@ -278,10 +274,10 @@ void parse_exp1(){
             while(top_op!='('){
                 op_stack.pop();
                 assert(!exp_stack.empty());
-                Expression* lhs=exp_stack.top();
+                Expression* rhs=exp_stack.top();
                 exp_stack.pop();
                 assert(!exp_stack.empty());
-                Expression*rhs=exp_stack.top();
+                Expression*lhs=exp_stack.top();
                 exp_stack.pop();
                 Expression* compound=new CompoundExp(lhs,rhs,optoken_to_string(top_op));
                 exp_stack.emplace(compound);

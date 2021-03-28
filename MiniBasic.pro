@@ -18,6 +18,7 @@ SOURCES += \
     tokenizer.cpp
 
 HEADERS += \
+    ExecThread.h \
     evalstate.h \
     exp.h \
     mainwindow.h \

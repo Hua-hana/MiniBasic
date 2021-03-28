@@ -25,6 +25,10 @@ private slots:
 
     void on_btnRunCode_clicked();
 
+public slots:
+    void set_res_output(std::string res);
+
+    void set_ast(std::string ast);
 private:
     Ui::MainWindow *ui;
 };
