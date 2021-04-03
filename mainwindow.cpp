@@ -97,20 +97,24 @@ void insert_cmd(Ui::MainWindow* ui,QString& str){
 //codeDisplay will be updated
 void MainWindow::on_cmdLineEdit_blockCountChanged(int newBlockCount)
 {
-
+    static int prev_block_count=0;
     if(st==WAIT_INPUT){
         cond.wakeAll();
         return;
     }
+
+
     //get the updated line
-    int curBlockCount=newBlockCount-1;
-    QTextDocument* doc=ui->cmdLineEdit->document();
-    QTextBlock blocktext=doc->findBlockByNumber(curBlockCount-1);
-    QString str=blocktext.text()+"\n";
+    while(prev_block_count<newBlockCount-1){
+        QTextDocument* doc=ui->cmdLineEdit->document();
+        QTextBlock blocktext=doc->findBlockByNumber(prev_block_count);
+        QString str=blocktext.text()+"\n";
 
-    //insert cmd
-    insert_cmd(ui,str);
-
+        //insert cmd
+        insert_cmd(ui,str);
+        prev_block_count++;
+    }
+    --prev_block_count;
 }
 
 
