@@ -19,7 +19,8 @@ extern string ast;
 extern unsigned int pcur;
 enum MachineState{WAIT_INPUT,CMDING};
 static MachineState st=CMDING;
-
+bool Exec_Immediate=false;
+QString cmd_for_immediate_exec;
 //used for input blocking
 QWaitCondition cond;
 QMutex mut;
@@ -60,6 +61,7 @@ void insert_cmd(Ui::MainWindow* ui,QString& str){
     int line=getLineNum(str);
     if(line==-1)throw Input_Exception("Input Error: no line number!");
     if(line>1000000)throw Input_Exception("Input Error: line number is too large!");
+
     int low=0;
     int high=ui->codeDisplay->document()->blockCount()-1;
     bool replace=false;//bring out of while loop
@@ -103,6 +105,7 @@ void MainWindow::on_cmdLineEdit_blockCountChanged(int newBlockCount)
     static int prev_block_count=0;
     if(st==WAIT_INPUT){
         cond.wakeAll();
+        prev_block_count++;//usually forget
         return;
     }
 
@@ -111,7 +114,45 @@ void MainWindow::on_cmdLineEdit_blockCountChanged(int newBlockCount)
     while(prev_block_count<newBlockCount-1){
         QTextDocument* doc=ui->cmdLineEdit->document();
         QTextBlock blocktext=doc->findBlockByNumber(prev_block_count);
-        QString str=blocktext.text()+"\n";
+        QString str=blocktext.text();
+
+        QString cmd_str=str.section(" ",0,0);
+        //extra command
+        if(cmd_str=="LIST"){prev_block_count++;return;}
+        if(cmd_str=="RUN"){
+            on_btnRunCode_clicked();
+            prev_block_count++;
+            return;
+        }
+        if(cmd_str=="LOAD"){
+            on_btnLoadCode_clicked();
+            prev_block_count++;
+            return;
+        }
+        if(cmd_str=="CLEAR"){
+            on_btnClearCode_clicked();
+            prev_block_count++;
+            return;
+        }
+        if(cmd_str=="QUIT"){
+            exit(0);
+        }
+        if(cmd_str=="HELP"){
+            ui->resDisplay->insertPlainText("HELP ME!!");
+            prev_block_count++;
+            return;
+        }
+
+        str+="\n";
+        //LET PRINT INPUT without line number
+        if(cmd_str=="PRINT"||cmd_str=="LET"||cmd_str=="INPUT"){
+            cmd_for_immediate_exec=str;
+            Exec_Immediate=true;
+            on_btnRunCode_clicked();
+            //two thread run if not return
+            prev_block_count++;//!!
+            return;
+        }
 
         //insert cmd
         try {insert_cmd(ui,str);}
@@ -223,7 +264,10 @@ int var_input(Ui::MainWindow*ui){
 void ExecThread::run(){
     /*begin of ui operation*/
     program.clear();
-    code_text=ui->codeDisplay->document()->toPlainText().toStdString();
+    //LET PRINT INPUT
+    if(Exec_Immediate)code_text="1 "+cmd_for_immediate_exec.toStdString();
+    else code_text=ui->codeDisplay->document()->toPlainText().toStdString();
+    Exec_Immediate=false;//click the run button and not exec the cmd_for_imm..._exec
     //initial the scanner;
     pcur=0;
     //set the ui in program
