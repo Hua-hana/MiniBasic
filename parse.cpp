@@ -2,7 +2,7 @@
 #include<stack>
 #include<exception.h>
 
-#define EXP_ERROR "Parse Error: LINE "+to_string(cur_line)+", expression is illegal"
+#define EXP_ERROR "Parse Error: LINE "+to_string(cur_line)+", expression is illegal!"
 
 
 static Statement*pre=NULL;
@@ -19,7 +19,17 @@ stack<Expression*> exp_stack;
 class Parse_Exception;
 
 int cur_line;//for error handling
+
+//last time error should be handled
+void init_for_parse(){
+    pre=NULL;
+    while(!op_stack.empty())op_stack.pop();
+    while(!exp_stack.empty())exp_stack.pop();
+}
+
+
 void parse(){
+    init_for_parse();
     while(true){
         int token_t=code_scanner();
         if(token_t==0)break;
@@ -55,7 +65,7 @@ void parse_statement(int line){
     }
     else if(token_t==INPUT){
         token_t=code_scanner();
-        if(token_t!=ID)throw Parse_Exception("Parse Error: LINE "+to_string(line)+", ID should follow INPUT");
+        if(token_t!=ID)throw Parse_Exception("Parse Error: LINE "+to_string(line)+", ID should follow INPUT!");
         Statement* stmt=new InputStatement(token_attr.id,line);
         if(pre)pre->set_next(stmt);
         program.insert(line,stmt);
@@ -63,7 +73,7 @@ void parse_statement(int line){
     }
     else if(token_t==GOTO){
         token_t=code_scanner();
-        if(token_t!=NUM)throw Parse_Exception("Parse Error: LINE "+to_string(line)+", NUM should follow INPUT");
+        if(token_t!=NUM)throw Parse_Exception("Parse Error: LINE "+to_string(line)+", NUM should follow INPUT!");
         Statement* stmt=new GotoStatement(token_attr.num,line);
         if(pre)pre->set_next(stmt);
         program.insert(line,stmt);
@@ -74,16 +84,16 @@ void parse_statement(int line){
         Expression* rhs=get_parse_exp();
         token_t=code_scanner();
         if(!(token_t=='<'||token_t=='='||token_t=='>'))
-            throw Parse_Exception("Parse Error: LINE "+to_string(line)+", operator is illegal");
+            throw Parse_Exception("Parse Error: LINE "+to_string(line)+", operator is illegal!");
         string op=optoken_to_string(token_t);
         parse_exp();
         Expression* lhs=get_parse_exp();
         token_t=code_scanner();
         if(token_t!=THEN)
-            throw Parse_Exception("Parse Error: LINE "+to_string(line)+", expecting the 'THEN'");
+            throw Parse_Exception("Parse Error: LINE "+to_string(line)+", expecting the 'THEN'!");
         token_t=code_scanner();
         if(token_t!=NUM)
-            throw Parse_Exception("Parse Error: LINE "+to_string(line)+", expecting the 'NUM'");
+            throw Parse_Exception("Parse Error: LINE "+to_string(line)+", expecting the 'NUM'!");
         Statement* stmt=new IFStatement(lhs,rhs,op,token_attr.num,line);
         if(pre)pre->set_next(stmt);
         program.insert(line,stmt);
@@ -95,7 +105,7 @@ void parse_statement(int line){
         program.insert(line,stmt);
         pre=stmt;
     }
-    else throw Parse_Exception("Parse Error: LINE "+to_string(line)+", unrecognized keyword");
+    else throw Parse_Exception("Parse Error: LINE "+to_string(line)+", unrecognized keyword!");
 }
 
 Expression* get_parse_exp(){
@@ -158,7 +168,7 @@ bool precedence_less(int l,int r){
 }
 
 
-void comsume_the_stack(){
+void consume_the_stack(){
     while(!op_stack.empty()){
         int top_op=op_stack.top();
         if(!isop(top_op))throw Parse_Exception(EXP_ERROR);
@@ -181,7 +191,7 @@ void parse_exp(bool minus_is_valid){
         //Careful!!
         // not the end of expression
         if(token_t==')')return;
-        comsume_the_stack();
+        consume_the_stack();
         if(exp_stack.size()!=1)throw Parse_Exception(EXP_ERROR);
         return;
     }
@@ -333,7 +343,7 @@ Expression* parse_exp2(){
     int token_t=code_scanner();
     if(token_t==ID){
         string c=lookahead2();
-        if(c=="**"){
+        if(c=="**!"){
             Expression*lhs=new IdentifierExp(token_attr.id);
             code_scanner();
             Expression*rhs=parse_exp();
@@ -347,7 +357,7 @@ Expression* parse_exp2(){
     }
     if(token_t==NUM){
         string c=lookahead2();
-        if(c=="**"){
+        if(c=="**!"){
             Expression*lhs=new ConstantExp(token_attr.num);
             code_scanner();
             Expression*rhs=parse_exp();
@@ -364,7 +374,7 @@ Expression* parse_exp2(){
         token_t=code_scanner();
         if(token_t==')'){
             string c=lookahead2();
-            if(c=="**"){
+            if(c=="**!"){
                 code_scanner();
                 Expression*rhs=parse_exp2();
                 Expression*ret=new CompoundExp(lhs,rhs,c);
@@ -382,7 +392,7 @@ Expression* parse_exp2(){
 Expression* parse_exp1(){
     Expression* lhs=parse_exp2();
     string c=lookahead1();
-    if(c=="*"||c=="/"){
+    if(c=="*"||c=="/!"){
         code_scanner();
         Expression*rhs=parse_exp1();
         Expression*ret=new CompoundExp(lhs,rhs,c);
@@ -395,7 +405,7 @@ Expression* parse_exp1(){
 Expression* parse_exp(){
     Expression* lhs=parse_exp1();
     string c=lookahead1();
-    if(c=="+"||c=="-"){
+    if(c=="+"||c=="-!"){
         code_scanner();
         Expression*rhs=parse_exp1();
         Expression*ret=new CompoundExp(lhs,rhs,c);

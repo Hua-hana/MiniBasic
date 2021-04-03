@@ -17,12 +17,12 @@ int CompoundExp::eval(EvalContext<string,int>& state)const{
     if(op=="-")return left-right;
     if(op=="*")return left*right;
     if(op=="/"){
-        if(right==0)throw Exec_Exception("Runtime Error: divide by zero");
+        if(right==0)throw Exec_Exception("Runtime Error: divide by zero!");
         return left/right;
     }
     if(op=="**")return pow(left,right);
 
-    throw Exec_Exception("Runtime Error: unregonized operator");
+    throw Exec_Exception("Runtime Error: unregonized operator!");
     return 0;
 }
 

@@ -30,6 +30,9 @@ public:
     void exec();
     void generate_ast();
     void clear();
+    bool is_empty(){
+        return bitmap.empty();
+    }
 
 };
 

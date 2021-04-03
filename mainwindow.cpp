@@ -58,7 +58,8 @@ void insert_cmd(Ui::MainWindow* ui,QString& str){
     bool empty_cmd=false;
     empty_cmd=emptycmd(str); //empty command
     int line=getLineNum(str);
-    if(line==-1)throw Input_Exception("Input Error!");
+    if(line==-1)throw Input_Exception("Input Error: no line number!");
+    if(line>1000000)throw Input_Exception("Input Error: line number is too large!");
     int low=0;
     int high=ui->codeDisplay->document()->blockCount()-1;
     bool replace=false;//bring out of while loop
@@ -68,7 +69,6 @@ void insert_cmd(Ui::MainWindow* ui,QString& str){
         QTextBlock midblock=Displaydoc->findBlockByNumber(mid);
         QString str_mid=midblock.text();
         int mid_line=getLineNum(str_mid);
-        if(mid_line==-1)throw Input_Exception("Input Error!");
         if(line<mid_line)high=mid;
         else if(line>mid_line)low=mid+1;
         else {replace=true;high=mid;break;}
@@ -228,6 +228,7 @@ void ExecThread::run(){
     pcur=0;
     //set the ui in program
     program.set_ui(ui);
+    st=CMDING;
 
     /*end of ui operation */
 
@@ -239,6 +240,7 @@ void ExecThread::run(){
         emit send_res_output(e.str);
         return;
     }
+    if(program.is_empty())return;
     program.generate_ast();
     try {
         program.exec();

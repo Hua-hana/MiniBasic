@@ -99,7 +99,7 @@ string word_scanner(){
 
 int lookahead1(){
     int pcur_tmp=pcur;
-    if(!(pcur<len))throw Parse_Exception("Parse Error: lookhead error");
+    if(!(pcur<len))throw Parse_Exception("Parse Error: lookhead error!");
     int ret=code_scanner();
     pcur=pcur_tmp;
     return ret;
