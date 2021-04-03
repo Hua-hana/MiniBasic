@@ -114,7 +114,6 @@ void MainWindow::on_cmdLineEdit_blockCountChanged(int newBlockCount)
         insert_cmd(ui,str);
         prev_block_count++;
     }
-    --prev_block_count;
 }
 
 

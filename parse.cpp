@@ -3,8 +3,8 @@
 static Statement*pre=NULL;
 
 void parse_statement(int);
-void parse_exp();
-void parse_exp1();
+void parse_exp(bool minus_is_valid=true);
+void parse_exp1(bool minus_is_valid=true);
 Expression* get_parse_exp();
 Expression* parse_assign();
 string optoken_to_string(int t);
@@ -140,9 +140,10 @@ string optoken_to_string(int t){
 
 bool precedence_less(int l,int r){
     if(r=='+'||r=='-')return false;
-    if((r=='*'||r=='/')&&l!='='&&l!='-')return false;
+    if((r=='*'||r=='/')&&l!='+'&&l!='-')return false;
     return true;
 }
+
 
 void comsume_the_stack(){
     while(!op_stack.empty()){
@@ -160,8 +161,8 @@ void comsume_the_stack(){
     }
 }
 
-void parse_exp(){
-    parse_exp1();
+void parse_exp(bool minus_is_valid){
+    parse_exp1(minus_is_valid);
     int token_t=lookahead1();
     if(!isop(token_t)){
         //Careful!!
@@ -258,15 +259,15 @@ void parse_exp(){
     else if(token_t==EXPO)op_stack.emplace(token_t);
     else assert(false);
 
-    parse_exp();
+    parse_exp(false);
 
 }
 
-void parse_exp1(){
+void parse_exp1(bool minus_is_valid){
     int token_t=code_scanner();
     if(token_t=='('){
         op_stack.emplace(token_t);
-        parse_exp();
+        parse_exp(true);
         token_t=code_scanner();
         if(token_t==')'){
             assert(!op_stack.empty());
@@ -297,6 +298,19 @@ void parse_exp1(){
         Expression* id=new IdentifierExp(token_attr.id);
         exp_stack.emplace(id);
         return;
+    }
+    //negative number
+    if(token_t=='-'){
+        if(!minus_is_valid)assert(false);//minus position error
+        token_t=lookahead1();
+        if(token_t==NUM){
+            code_scanner();
+            Expression* num=new ConstantExp(-token_attr.num);
+            exp_stack.emplace(num);
+            return;
+        }
+        //not a negative number, error parsing
+        else assert(false);
     }
     assert(false);
 }
