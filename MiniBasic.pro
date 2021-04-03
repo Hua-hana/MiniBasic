@@ -20,6 +20,7 @@ SOURCES += \
 HEADERS += \
     ExecThread.h \
     evalstate.h \
+    exception.h \
     exp.h \
     mainwindow.h \
     parse.h \

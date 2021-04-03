@@ -1,7 +1,7 @@
 #include<stdlib.h>
 #include<string>
 #include"parse.h"
-
+#include"exception.h"
 using namespace std;
 
 //curent pointer
@@ -18,6 +18,8 @@ tokentype number_scanner();
 void skip_blank();
 
 string word_scanner();
+
+class Parse_Exception;
 
 bool is_blank(const char & c){
     return  c==' '||c=='\n'||c=='\t';
@@ -97,7 +99,7 @@ string word_scanner(){
 
 int lookahead1(){
     int pcur_tmp=pcur;
-    assert(pcur<len);
+    if(!(pcur<len))throw Parse_Exception("Parse Error: lookhead error");
     int ret=code_scanner();
     pcur=pcur_tmp;
     return ret;

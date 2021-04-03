@@ -3,6 +3,9 @@
 
 #include"exp.h"
 #include<cmath>
+#include"exception.h"
+
+class Exec_Exception;
 int CompoundExp::eval(EvalContext<string,int>& state)const{
     int right=rhs->eval(state);
     if(op=="="){
@@ -14,11 +17,12 @@ int CompoundExp::eval(EvalContext<string,int>& state)const{
     if(op=="-")return left-right;
     if(op=="*")return left*right;
     if(op=="/"){
-        assert(right!=0);
+        if(right==0)throw Exec_Exception("Runtime Error: divide by zero");
         return left/right;
     }
     if(op=="**")return pow(left,right);
-    //FIXME
+
+    throw Exec_Exception("Runtime Error: unregonized operator");
     return 0;
 }
 

@@ -42,7 +42,7 @@ private:
     Expression *exp;
 public:
     LetStatement(Expression *e=NULL,int line=0):Statement(line),exp(e){}
-    virtual ~LetStatement(){}
+    virtual ~LetStatement(){delete exp;}
     virtual string to_ast()const;
     virtual Statement* eval(EvalContext<string,int> &)const;
     virtual StatementType type()const{return Let;}
@@ -54,7 +54,7 @@ private:
 public:
     PrintStatement(Expression *e=NULL,int line=0)
         :Statement(line),exp(e){}
-    virtual ~PrintStatement(){}
+    virtual ~PrintStatement(){delete exp;}
     virtual string to_ast()const;
     virtual Statement* eval(EvalContext<string,int> &)const;
     virtual StatementType type()const{return Print;}
@@ -65,7 +65,7 @@ private:
     string id;
 public:
     InputStatement( string str="",int line=0):Statement(line),id(str){}
-    ~InputStatement(){}
+    virtual ~InputStatement(){}
     virtual string to_ast()const;
     virtual Statement* eval(EvalContext<string,int> &state)const;
     virtual StatementType type()const{return Input;}
@@ -76,7 +76,7 @@ private:
     int goto_line;
 public:
     GotoStatement(int nl=0,int line=0):Statement(line),goto_line(nl){}
-    ~GotoStatement(){}
+    virtual ~GotoStatement(){}
     virtual string to_ast()const;
     virtual Statement* eval(EvalContext<string,int> &)const;
     virtual StatementType type()const{return Goto;}
@@ -90,7 +90,7 @@ private:
 public:
     IFStatement(Expression* e1=NULL,Expression*e2=NULL,string op="",int nl=0,int line=0)
         :Statement(line),exp1(e1),exp2(e2),op(op),goto_line(nl){}
-    ~IFStatement(){}
+    virtual ~IFStatement(){delete exp1;delete exp2;}
     virtual string to_ast()const;
     virtual Statement* eval(EvalContext<string,int> &)const;
     virtual StatementType type()const{return If;}

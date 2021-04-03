@@ -3,10 +3,13 @@
 
 #include"evalstate.h"
 #include<cassert>
+#include"exception.h"
+
 enum ExpType{Constant,Identifier,Compound};
 
 template<class K,class V>
 class EvalContext;
+class Exec_Exception;
 
 class Expression{
 public:
@@ -27,7 +30,7 @@ private:
 
 public:
     ConstantExp(int val=0):value(val){}
-    ~ConstantExp(){}
+    virtual ~ConstantExp(){}
     virtual int eval(EvalContext<string,int>&)const{
         return value;
     }
@@ -47,10 +50,10 @@ private:
     string id;
 public:
     IdentifierExp(string str=""):id(str){}
-    ~IdentifierExp(){}
+    virtual ~IdentifierExp(){}
     virtual int eval(EvalContext<string,int>&st)const{
         //FIXME
-        assert(st.is_defined(id));
+        if(!st.is_defined(id))throw Exec_Exception("Runtime Error: use undefined variable");
         return st.get(id);
     }
     virtual string to_ast(string & tab)const{
@@ -71,7 +74,7 @@ private:
 public:
     CompoundExp(Expression* lhs=NULL,Expression*rhs=NULL,string op=""):
         lhs(lhs),rhs(rhs),op(op){}
-    ~CompoundExp(){}
+    virtual ~CompoundExp(){}
     virtual int eval(EvalContext<string,int>& state)const;
     virtual string to_ast(string & tab)const;
     virtual ExpType type()const{

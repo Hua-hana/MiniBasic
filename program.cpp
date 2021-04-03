@@ -25,3 +25,18 @@ void Program::generate_ast(){
         cur=cur->get_next();
     }
 }
+
+Program::~Program(){
+    for(auto &iter:bitmap){
+        Statement* del=iter.second;
+        delete del;
+    }
+}
+
+void Program::clear(){
+    for(auto &iter:bitmap){
+        Statement* del=iter.second;
+        delete del;
+    }
+    bitmap.clear();
+}

@@ -10,6 +10,7 @@
 #include<ExecThread.h>
 #include <QWaitCondition>
 #include <QMutex>
+#include"exception.h"
 std::string code_text;
 
 Program program;
@@ -57,6 +58,7 @@ void insert_cmd(Ui::MainWindow* ui,QString& str){
     bool empty_cmd=false;
     empty_cmd=emptycmd(str); //empty command
     int line=getLineNum(str);
+    if(line==-1)throw Input_Exception("Input Error!");
     int low=0;
     int high=ui->codeDisplay->document()->blockCount()-1;
     bool replace=false;//bring out of while loop
@@ -66,7 +68,7 @@ void insert_cmd(Ui::MainWindow* ui,QString& str){
         QTextBlock midblock=Displaydoc->findBlockByNumber(mid);
         QString str_mid=midblock.text();
         int mid_line=getLineNum(str_mid);
-        //if(mid_line==-1);//TODO convert fail
+        if(mid_line==-1)throw Input_Exception("Input Error!");
         if(line<mid_line)high=mid;
         else if(line>mid_line)low=mid+1;
         else {replace=true;high=mid;break;}
@@ -97,6 +99,7 @@ void insert_cmd(Ui::MainWindow* ui,QString& str){
 //codeDisplay will be updated
 void MainWindow::on_cmdLineEdit_blockCountChanged(int newBlockCount)
 {
+    ui->resDisplay->clear();//clear the error message
     static int prev_block_count=0;
     if(st==WAIT_INPUT){
         cond.wakeAll();
@@ -111,7 +114,12 @@ void MainWindow::on_cmdLineEdit_blockCountChanged(int newBlockCount)
         QString str=blocktext.text()+"\n";
 
         //insert cmd
-        insert_cmd(ui,str);
+        try {insert_cmd(ui,str);}
+        catch(Input_Exception e){
+            ui->resDisplay->insertPlainText(QString::fromStdString(e.str));
+            prev_block_count++;
+            return;
+        }
         prev_block_count++;
     }
 }
@@ -121,6 +129,8 @@ void MainWindow::on_cmdLineEdit_blockCountChanged(int newBlockCount)
 //clear the code
 void MainWindow::on_btnClearCode_clicked()
 {
+    ui->resDisplay->clear();
+    ui->treeDisplay->clear();
     ui->codeDisplay->clear();
 }
 
@@ -195,9 +205,15 @@ int var_input(Ui::MainWindow*ui){
     QTextBlock blocktext=doc->findBlockByNumber(curBlockCount-1);
     QString str=blocktext.text()+"\n";
     int low=0;
-    while(!(str[low]>='0'&&str[low]<='9'))++low;
+    while(!((str[low]>='0'&&str[low]<='9')||str[low]=='-'))++low;
+    if(str[low]=='\n')throw Exec_Exception("Runtime Error: input invalid");
     int high=low;
+    if(str[low]=='-'){
+        high=low+1;
+    }
+    if(str[high]<'0'||str[high]>'9')throw Exec_Exception("Runtime Error: input invalid");
     while(str[high]>='0'&&str[high]<='9')++high;
+
     int ret=std::atoi(str.toStdString().substr(low,high).c_str());
 
     st=CMDING;
@@ -216,9 +232,21 @@ void ExecThread::run(){
     /*end of ui operation */
 
 
-    parse();
+    try {
+        parse();
+    }
+    catch(Parse_Exception e){
+        emit send_res_output(e.str);
+        return;
+    }
     program.generate_ast();
-    program.exec();
+    try {
+        program.exec();
+    }
+    catch(Exec_Exception e){
+        emit send_res_output(e.str);
+        return;
+    }
 
     emit send_res_output(res_output);
     emit send_ast(ast);
