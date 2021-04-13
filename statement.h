@@ -3,7 +3,7 @@
 
 #include"exp.h"
 #include"program.h"
-enum StatementType{Rem,Let,Print,Input,Goto,If,End};
+enum StatementType{Rem,Let,Print,Input,Goto,If,End,Err};
 
 template<class K,class V>
 class EvalContext;
@@ -25,6 +25,17 @@ public:
     virtual Statement* eval(EvalContext<string,int> &state)const=0;
     virtual StatementType type()const=0;
 };
+
+class ErrorStatement:public Statement{
+private:
+    string message;
+public:
+    ErrorStatement(int line=0,string mes=""):Statement(line),message(mes){}
+    virtual string to_ast()const;
+    virtual Statement* eval(EvalContext<string,int> &)const{return next;}
+    virtual StatementType type()const{return Err;};
+};
+
 
 class RemStatement:public Statement{
 private:

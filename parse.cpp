@@ -20,6 +20,8 @@ class Parse_Exception;
 
 int cur_line;//for error handling
 
+bool parse_error_flag=false;
+
 //last time error should be handled
 void init_for_parse(){
     pre=NULL;
@@ -38,10 +40,13 @@ void parse(){
             parse_statement(cur_line);
         }
     }
+    if(parse_error_flag)throw Parse_Exception("Parse Error");
 }
 
 void parse_statement(int line){
     int token_t=code_scanner();
+    string error_str="";
+    try{
     if(token_t==REM){
         Statement* stmt=new RemStatement(token_attr.comment,line);
         if(pre)pre->set_next(stmt);
@@ -105,7 +110,25 @@ void parse_statement(int line){
         program.insert(line,stmt);
         pre=stmt;
     }
-    else throw Parse_Exception("Parse Error: LINE "+to_string(line)+", unrecognized keyword!");
+    else throw Parse_Exception("Parse Error: LINE "+to_string(line)+", unrecognized command!");
+    }
+    catch (Parse_Exception e){
+        error_str=e.str;
+        goto parse_error;
+    }
+    //end of line is \n
+    token_t=lookahead1();
+    if(token_t!='\n'){error_str="something unexpected end of line";goto parse_error;}
+    else code_scanner();
+
+    return;//if no error
+parse_error:
+        skip_to_new_line();
+        Statement *stmt=new ErrorStatement(line,error_str);
+        if(pre)pre->set_next(stmt);
+        program.insert(line,stmt);
+        pre=stmt;
+        parse_error_flag=true;
 }
 
 Expression* get_parse_exp(){
@@ -287,8 +310,9 @@ void parse_exp(bool minus_is_valid){
 }
 
 void parse_exp1(bool minus_is_valid){
-    int token_t=code_scanner();
+    int token_t=lookahead1();
     if(token_t=='('){
+        code_scanner();
         op_stack.emplace(token_t);
         parse_exp(true);
         token_t=code_scanner();
@@ -313,17 +337,20 @@ void parse_exp1(bool minus_is_valid){
         else throw Parse_Exception(EXP_ERROR);
     }
     if(token_t==NUM){
+        code_scanner();
         Expression* num=new ConstantExp(token_attr.num);
         exp_stack.emplace(num);
         return;
     }
     if(token_t==ID){
+        code_scanner();
         Expression* id=new IdentifierExp(token_attr.id);
         exp_stack.emplace(id);
         return;
     }
     //negative number
     if(token_t=='-'){
+        code_scanner();
         if(!minus_is_valid)throw Parse_Exception(EXP_ERROR);//minus position error
         token_t=lookahead1();
         if(token_t==NUM){

@@ -3,6 +3,11 @@
 
 extern int var_input(Ui::MainWindow*ui);
 extern int input_ret;
+
+string ErrorStatement::to_ast() const{
+    return to_string(line)+" "+message+"\n";
+}
+
 string RemStatement::to_ast()const{
     return to_string(line)+" REM\n  "+comment+"\n";
 }

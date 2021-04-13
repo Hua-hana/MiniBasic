@@ -279,13 +279,19 @@ void ExecThread::run(){
 
     try {
         parse();
+
     }
     catch(Parse_Exception e){
+        //need to show the ast
+        program.generate_ast();
         emit send_res_output(e.str);
+        emit send_ast(ast);
         return;
     }
+
     if(program.is_empty())return;
     program.generate_ast();
+    emit send_ast(ast);
     try {
         program.exec();
     }
@@ -295,7 +301,7 @@ void ExecThread::run(){
     }
 
     emit send_res_output(res_output);
-    emit send_ast(ast);
+
 
 }
 

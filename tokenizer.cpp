@@ -22,7 +22,7 @@ string word_scanner();
 class Parse_Exception;
 
 bool is_blank(const char & c){
-    return  c==' '||c=='\n'||c=='\t';
+    return  c==' '||c=='\t';
 }
 bool is_letter(char c){
     return (c>='a'&&c<='z')||(c>='A'&&c<'Z')||c=='_';
@@ -41,6 +41,7 @@ int code_scanner(){
     }
     char c=code_text[pcur];
 
+    if(c=='\n'){++pcur;return '\n';}
     if(c>='0'&&c<='9')return number_scanner();
     if(c=='+'||c=='*'||c=='-'||c=='/'||c=='('||c==')'||c=='='||c=='>'||c=='<'){
         if(c=='*'&&pcur+1<len&&code_text[pcur+1]=='*'){
@@ -105,4 +106,8 @@ int lookahead1(){
     return ret;
 }
 
+void skip_to_new_line(){
+    while(pcur<len&&code_text[pcur]!='\n')++pcur;
+    if(pcur<len&&code_text[pcur]=='\n')++pcur;
+}
 
