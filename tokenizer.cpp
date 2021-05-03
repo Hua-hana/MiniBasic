@@ -16,7 +16,7 @@ unsigned int len;
 tokentype number_scanner();
 
 void skip_blank();
-
+string str_scanner();
 string word_scanner();
 
 class Parse_Exception;
@@ -51,7 +51,13 @@ int code_scanner(){
         pcur++;
         return (int)c;
     }
-
+    //for argument list
+    if(c==','){++pcur;return ',';}
+    //string
+    if(c=='"'){
+        token_attr.id=str_scanner();
+        return STR;
+    }
     string word=word_scanner();
     if(word=="REM"){
         int low=pcur;
@@ -67,6 +73,8 @@ int code_scanner(){
     if(word=="IF")return IF;
     if(word=="THEN")return THEN;
     if(word=="END")return END;
+    if(word=="PRINTF")return PRINTF;
+    if(word=="INPUTS")return INPUTS;
     else {
         //FIXME identified must have rule!
         token_attr.id=word;
@@ -90,7 +98,26 @@ void skip_blank(){
         ++pcur;
 }
 
-
+//scan the string, only support the '\n'
+string str_scanner(){
+    assert(code_text[pcur]=='"');
+    string ret="";
+    pcur++;
+    while(pcur<len&&code_text[pcur]!='"'){
+        if(code_text[pcur]=='\n')throw Parse_Exception("Parse Error: Expect a \"!");
+        if(code_text[pcur]=='\\'){
+            if(pcur+1>=len)throw Parse_Exception("Parse Error: Invalid \\ symbol!");
+            if(code_text[pcur+1]=='n')ret.push_back('\n');
+            pcur+=2;
+            continue;
+        }
+        ret.push_back(code_text[pcur]);
+        ++pcur;
+    }
+    if(pcur==len)throw Parse_Exception("Parse Error: Expect a \"!");
+    ++pcur;
+    return ret;
+}
 
 string word_scanner(){
     int low=pcur;

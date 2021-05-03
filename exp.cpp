@@ -35,7 +35,6 @@ string CompoundExp::to_ast(string & tab)const{
 string CompoundStrExp::eval_str(EvalContext& state)const{
     string right=rhs->eval_str(state);
     if(op=="="){
-        assert(lhs->type()==IdentifierStr);
         state.add(lhs->getIdentifierName(),right);
         return right;
     }

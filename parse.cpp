@@ -15,6 +15,7 @@ Expression* parse_assign();
 string optoken_to_string(int t);
 //for parse expression
 stack<int> op_stack;
+
 stack<Expression*> exp_stack;
 class Parse_Exception;
 
@@ -110,8 +111,33 @@ void parse_statement(int line){
         program.insert(line,stmt);
         pre=stmt;
     }
+    //PRINTF "format",exp1,exp2...
     else if(token_t==PRINTF){
-
+        token_t=lookahead1();
+        if(token_t!=STR)throw Parse_Exception("Parse Error: LINE "+to_string(line)+", expected a string after PRINTF!");
+        parse_exp();
+        Expression* format=get_parse_exp();
+        token_t=lookahead1();
+        vector<Expression*>args;
+        while(token_t==','){
+            code_scanner();
+            parse_exp();
+            Expression* arg=get_parse_exp();
+            args.emplace_back(arg);
+            token_t=lookahead1();
+        }
+        Statement* stmt=new PrintFStatement(format,args,line);
+        if(pre)pre->set_next(stmt);
+        program.insert(line,stmt);
+        pre=stmt;
+    }
+    else if(token_t==INPUTS){
+        token_t=code_scanner();
+        if(token_t!=ID)throw Parse_Exception("Parse Error: LINE "+to_string(line)+", ID should follow INPUTS!");
+        Statement* stmt=new InputStrStatement(token_attr.id,line);
+        if(pre)pre->set_next(stmt);
+        program.insert(line,stmt);
+        pre=stmt;
     }
     else throw Parse_Exception("Parse Error: LINE "+to_string(line)+", unrecognized command!");
     }
@@ -210,7 +236,17 @@ void consume_the_stack(){
     }
 }
 
-void parse_exp(bool minus_is_valid){
+//exp_type 0:int 1:string
+void parse_exp(bool minus_is_valid,int &exp_type){
+    int type_t=lookahead1();
+    //it is string!
+    if(type_t==STR){
+        exp_type=STR_TYPE;
+        Expression* str_exp=new ConstantStrExp(token_attr.id);//use the id attribute to represent the string
+        exp_stack.emplace(str_exp);
+        return;
+    }
+    exp_type=INT_TYPE;
     parse_exp1(minus_is_valid);
     int token_t=lookahead1();
     if(!isop(token_t)){

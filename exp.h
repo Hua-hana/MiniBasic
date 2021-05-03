@@ -5,7 +5,7 @@
 #include<cassert>
 #include"exception.h"
 
-enum ExpType{Constant,Identifier,Compound,ConstantStr,IdentifierStr,CompoundStr};
+enum ExpType{Constant,Identifier,Compound,ConstantStr,CompoundStr};
 
 
 class EvalContext;
@@ -36,6 +36,7 @@ public:
         return value;
     }
     virtual string eval_str(EvalContext&)const{
+        throw Exec_Exception("Runtime Error: type error!");
         return "";
     }
     virtual string to_ast(string & tab)const{
@@ -57,6 +58,7 @@ public:
     ConstantStrExp(string val=""):value(val){}
     virtual ~ConstantStrExp(){}
     virtual int eval_int(EvalContext&)const{
+        throw Exec_Exception("Runtime Error: type error!");
         return 0;
     }
     virtual string eval_str(EvalContext&)const{
@@ -76,16 +78,20 @@ public:
 class IdentifierExp:public Expression{
 private:
     string id;
+    int id_type;
 public:
     IdentifierExp(string str=""):id(str){}
     virtual ~IdentifierExp(){}
     virtual int eval_int(EvalContext&st)const{
         //FIXME
-        if(!st.is_defined_int(id))throw Exec_Exception("Runtime Error: use undefined variable");
+        if(!st.is_defined(id))throw Exec_Exception("Runtime Error: use undefined variable");
+        if(st.type(id)!=INT_TYPE)throw Exec_Exception("Runtime Error: type error!");
         return st.get_int(id);
     }
-    virtual string eval_str(EvalContext&)const{
-        return "";
+    virtual string eval_str(EvalContext&st)const{
+        if(!st.is_defined(id))throw Exec_Exception("Runtime Error: use undefined variable");
+        if(st.type(id)!=STR_TYPE)throw Exec_Exception("Runtime Error: type error!");
+        return st.get_str(id);
     }
     virtual string to_ast(string & tab)const{
         return tab + id;
@@ -93,34 +99,12 @@ public:
     virtual ExpType type()const{
         return Identifier;
     }
+
     virtual Expression* getLHS()const{return NULL;}
     virtual Expression* getRHS()const{return NULL;}
     virtual string getIdentifierName()const{return id;}
 };
 
-class IdentifierStrExp:public Expression{
-private:
-    string id;
-public:
-    IdentifierStrExp(string str=""):id(str){}
-    virtual ~IdentifierStrExp(){}
-    virtual int eval_int(EvalContext&)const{
-        return 0;
-    }
-    virtual string eval_str(EvalContext&st)const{
-        if(!st.is_defined_str(id))throw Exec_Exception("Runtime Error: use undefined variable");
-        return st.get_str(id);
-    }
-    virtual string to_ast(string & tab)const{
-        return tab + id;
-    }
-    virtual ExpType type()const{
-        return IdentifierStr;
-    }
-    virtual Expression* getLHS()const{return NULL;}
-    virtual Expression* getRHS()const{return NULL;}
-    virtual string getIdentifierName()const{return id;}
-};
 
 
 class CompoundExp:public Expression{
@@ -133,6 +117,7 @@ public:
     virtual ~CompoundExp(){}
     virtual int eval_int(EvalContext& state)const;
     virtual string eval_str(EvalContext&)const{
+        throw Exec_Exception("Runtime Error: type error!");
         return "";
     }
     virtual string to_ast(string & tab)const;
@@ -159,6 +144,7 @@ public:
         lhs(lhs),rhs(rhs),op(op){}
     virtual ~CompoundStrExp(){}
     virtual int eval_int(EvalContext&)const{
+        throw Exec_Exception("Runtime Error: type error!");
         return 0;
     }
     virtual string eval_str(EvalContext& state)const;

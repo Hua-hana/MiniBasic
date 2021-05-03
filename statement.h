@@ -3,6 +3,7 @@
 
 #include"exp.h"
 #include"program.h"
+#include<vector>
 enum StatementType{Rem,Let,Print,Input,Goto,If,End,Err};
 
 class EvalContext;
@@ -75,9 +76,9 @@ private:
     Expression *exp;
     vector<Expression*> args;
 public:
-    PrintFStatement(Expression *e=NULL,int line=0)
-        :Statement(line),exp(e){}
-    virtual ~PrintFStatement(){delete exp;}
+    PrintFStatement(Expression *e,vector<Expression*>& args,int line)
+        :Statement(line),exp(e),args(args){}
+    virtual ~PrintFStatement(){delete exp;for(auto &arg:args)delete arg;}
     virtual string to_ast()const;
     virtual Statement* eval(EvalContext &)const;
     virtual StatementType type()const{return Print;}

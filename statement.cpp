@@ -24,10 +24,6 @@ Statement* LetStatement::eval(EvalContext &state) const{
 }
 
 Statement* PrintStatement::eval(EvalContext &state) const{
-    auto exp_type=exp->type();
-    if(exp_type==ConstantStr||exp_type==IdentifierStr||exp_type==CompoundStr){
-        throw Exec_Exception("Runtime Error: Print a string value! Use PRINTF?");
-    }
     int ans=exp->eval_int(state);
     res_output.append(to_string(ans)+"\n");
     return next;
@@ -53,12 +49,18 @@ Statement* PrintFStatement::eval(EvalContext &state) const{
             if(args_p>=args.size())throw Exec_Exception("Runtime Error: PrintF doesn't have enough arguments!");
             auto exp_arg=args[args_p++];
             auto exp_type=exp_arg->type();
-            if(exp_type==ConstantStr||exp_type==IdentifierStr||exp_type==CompoundStr){
+            auto id=exp_arg->getIdentifierName();
+            int id_type=-1;
+            if(exp_arg->type()==Identifier&&state.is_defined(id)){
+                id_type=state.type(id);
+            }
+            if(exp_type==ConstantStr||exp_type==CompoundStr||id_type==STR_TYPE){
                 ans.append(exp->eval_str(state));
             }
-            else {
+            else if(exp_type==Constant||exp_type==Compound||id_type==INT_TYPE){
                 ans.append(to_string(exp->eval_int(state)));
             }
+            else throw Exec_Exception("Runtime Error: undefined id or type error in printf!");
             i+=2;
             continue;
         }
@@ -113,14 +115,7 @@ string IFStatement::to_ast() const{
 }
 
 Statement* IFStatement::eval(EvalContext &state) const{
-    auto exp_type=exp1->type();
-    if(exp_type==ConstantStr||exp_type==IdentifierStr||exp_type==CompoundStr){
-        throw Exec_Exception("Runtime Error: Type error in If Statement!");
-    }
-    exp_type=exp2->type();
-    if(exp_type==ConstantStr||exp_type==IdentifierStr||exp_type==CompoundStr){
-        throw Exec_Exception("Runtime Error: Type error in If Statement!");
-    }
+
     int left=exp1->eval_int(state);
     int right=exp2->eval_int(state);
 
