@@ -25,6 +25,10 @@ private slots:
 
     void on_btnRunCode_clicked();
 
+    void on_pushButton_clicked();
+
+    void on_btnDebugStep_clicked();
+
 public slots:
     void set_res_output(std::string res);
 

@@ -304,3 +304,8 @@ void MainWindow::set_ast(string ast_res){
     ui->treeDisplay->insertPlainText(str);
 }
 
+
+void MainWindow::on_btnDebugStep_clicked()
+{
+
+}
