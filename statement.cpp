@@ -44,7 +44,7 @@ Statement* PrintFStatement::eval(EvalContext &state) const{
     for(int i=0;i<size;++i){
         if(format[i]=='{'){
             if(i+1>=size||format[i+1]!='}')throw Exec_Exception("Runtime Error: Invalid single { !");
-            ans.append(format.substr(off,i));
+            ans.append(format.substr(off,i-off));
             off=i+2;
             if(args_p>=args.size())throw Exec_Exception("Runtime Error: PrintF doesn't have enough arguments!");
             auto exp_arg=args[args_p++];
@@ -55,16 +55,17 @@ Statement* PrintFStatement::eval(EvalContext &state) const{
                 id_type=state.type(id);
             }
             if(exp_type==ConstantStr||exp_type==CompoundStr||id_type==STR_TYPE){
-                ans.append(exp->eval_str(state));
+                ans.append(exp_arg->eval_str(state));
             }
             else if(exp_type==Constant||exp_type==Compound||id_type==INT_TYPE){
-                ans.append(to_string(exp->eval_int(state)));
+                ans.append(to_string(exp_arg->eval_int(state)));
             }
             else throw Exec_Exception("Runtime Error: undefined id or type error in printf!");
             i+=2;
             continue;
         }
     }
+    ans.append(format.substr(off,size-off));
     res_output.append(ans+"\n");
     return next;
 }
@@ -85,7 +86,12 @@ string InputStatement::to_ast() const{
 
 Statement* InputStatement::eval(EvalContext&state) const{
     string inp=var_input(program.get_ui());
-    state.add(id,atoi((inp.c_str())));
+    int res=atoi((inp.c_str()));
+    if(res==0){
+        if(inp.length()!=1||inp[0]!='0')
+            throw Exec_Exception("Runtime Error: input invalid");
+    }
+    state.add(id,res);
     return next;
 }
 

@@ -179,10 +179,13 @@ Expression* parse_assign(){
         token_t=code_scanner();
         if(token_t=='='){
             op="=";
+            token_t=lookahead1();
             parse_exp();
-            //error handle
             rhs=get_parse_exp();
-            Expression* ret=new CompoundExp(lhs,rhs,op);
+            Expression* ret;
+            //if the rhs is a string
+            if(token_t!=STR)ret=new CompoundExp(lhs,rhs,op);
+            else ret=new CompoundStrExp(lhs,rhs,op);
             return ret;
         }
         else throw Parse_Exception(EXP_ERROR);
@@ -237,16 +240,16 @@ void consume_the_stack(){
 }
 
 //exp_type 0:int 1:string
-void parse_exp(bool minus_is_valid,int &exp_type){
+void parse_exp(bool minus_is_valid){
     int type_t=lookahead1();
     //it is string!
     if(type_t==STR){
-        exp_type=STR_TYPE;
+        code_scanner();
         Expression* str_exp=new ConstantStrExp(token_attr.id);//use the id attribute to represent the string
         exp_stack.emplace(str_exp);
         return;
     }
-    exp_type=INT_TYPE;
+
     parse_exp1(minus_is_valid);
     int token_t=lookahead1();
     if(!isop(token_t)){

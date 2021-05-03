@@ -235,19 +235,16 @@ string var_input(Ui::MainWindow*ui){
     int curBlockCount=ui->cmdLineEdit->blockCount()-1;
     QTextDocument* doc=ui->cmdLineEdit->document();
     QTextBlock blocktext=doc->findBlockByNumber(curBlockCount-1);
-    QString str=blocktext.text()+"\n";
+    QString str=blocktext.text();
     int low=0;
-    while(!((str[low]>='0'&&str[low]<='9')||str[low]=='-'))++low;
-    if(str[low]=='\n')throw Exec_Exception("Runtime Error: input invalid");
+    while(low<str.length()&&(str[low]=='?'||str[low]==' '||str[low]=='\t'))++low;
+    if(low==str.length())throw Exec_Exception("Runtime Error: input invalid");
+
     int high=low;
-    if(str[low]=='-'){
-        high=low+1;
-    }
-    if(str[high]<'0'||str[high]>'9')throw Exec_Exception("Runtime Error: input invalid");
-    while(str[high]>='0'&&str[high]<='9')++high;
+    while(high<str.length()&&str[high]!=' '&&str[high]!='\t')++high;
 
     st=CMDING;
-    return str.toStdString().substr(low,high);
+    return str.toStdString().substr(low,high-low+1);
 }
 
 void ExecThread::run(){

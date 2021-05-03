@@ -16,7 +16,7 @@ unsigned int len;
 tokentype number_scanner();
 
 void skip_blank();
-string str_scanner();
+string str_scanner(const char cite);
 string word_scanner();
 
 class Parse_Exception;
@@ -54,8 +54,8 @@ int code_scanner(){
     //for argument list
     if(c==','){++pcur;return ',';}
     //string
-    if(c=='"'){
-        token_attr.id=str_scanner();
+    if(c=='"'||c=='\''){
+        token_attr.id=str_scanner(c);
         return STR;
     }
     string word=word_scanner();
@@ -99,11 +99,11 @@ void skip_blank(){
 }
 
 //scan the string, only support the '\n'
-string str_scanner(){
-    assert(code_text[pcur]=='"');
+string str_scanner(const char cite){
+    assert(code_text[pcur]==cite);
     string ret="";
     pcur++;
-    while(pcur<len&&code_text[pcur]!='"'){
+    while(pcur<len&&code_text[pcur]!=cite){
         if(code_text[pcur]=='\n')throw Parse_Exception("Parse Error: Expect a \"!");
         if(code_text[pcur]=='\\'){
             if(pcur+1>=len)throw Parse_Exception("Parse Error: Invalid \\ symbol!");

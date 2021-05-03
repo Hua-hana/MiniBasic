@@ -36,7 +36,7 @@ public:
         return value;
     }
     virtual string eval_str(EvalContext&)const{
-        throw Exec_Exception("Runtime Error: type error!");
+        throw Exec_Exception("Runtime Error: type error in ConstantExp!");
         return "";
     }
     virtual string to_ast(string & tab)const{
@@ -58,7 +58,7 @@ public:
     ConstantStrExp(string val=""):value(val){}
     virtual ~ConstantStrExp(){}
     virtual int eval_int(EvalContext&)const{
-        throw Exec_Exception("Runtime Error: type error!");
+        throw Exec_Exception("Runtime Error: type error in ConstantStrExp!");
         return 0;
     }
     virtual string eval_str(EvalContext&)const{
@@ -78,19 +78,18 @@ public:
 class IdentifierExp:public Expression{
 private:
     string id;
-    int id_type;
 public:
     IdentifierExp(string str=""):id(str){}
     virtual ~IdentifierExp(){}
     virtual int eval_int(EvalContext&st)const{
         //FIXME
         if(!st.is_defined(id))throw Exec_Exception("Runtime Error: use undefined variable");
-        if(st.type(id)!=INT_TYPE)throw Exec_Exception("Runtime Error: type error!");
+        if(st.type(id)!=INT_TYPE)throw Exec_Exception("Runtime Error: type error in IdentifierExp!");
         return st.get_int(id);
     }
     virtual string eval_str(EvalContext&st)const{
         if(!st.is_defined(id))throw Exec_Exception("Runtime Error: use undefined variable");
-        if(st.type(id)!=STR_TYPE)throw Exec_Exception("Runtime Error: type error!");
+        if(st.type(id)!=STR_TYPE)throw Exec_Exception("Runtime Error: type error in IdentifierExp!");
         return st.get_str(id);
     }
     virtual string to_ast(string & tab)const{
@@ -117,7 +116,7 @@ public:
     virtual ~CompoundExp(){}
     virtual int eval_int(EvalContext& state)const;
     virtual string eval_str(EvalContext&)const{
-        throw Exec_Exception("Runtime Error: type error!");
+        throw Exec_Exception("Runtime Error: type error in CompoundExp!");
         return "";
     }
     virtual string to_ast(string & tab)const;
@@ -144,7 +143,7 @@ public:
         lhs(lhs),rhs(rhs),op(op){}
     virtual ~CompoundStrExp(){}
     virtual int eval_int(EvalContext&)const{
-        throw Exec_Exception("Runtime Error: type error!");
+        throw Exec_Exception("Runtime Error: type error in CompoundStrExp!");
         return 0;
     }
     virtual string eval_str(EvalContext& state)const;
