@@ -4,6 +4,9 @@
 
 #define EXP_ERROR "Parse Error: LINE "+to_string(cur_line)+", expression is illegal!"
 
+//when parse error happen, add line to the highlights
+QList<QPair<unsigned int,QColor>> highlights;
+extern unsigned int pcur;//for the highlights
 
 static Statement*pre=NULL;
 
@@ -152,12 +155,14 @@ void parse_statement(int line){
 
     return;//if no error
 parse_error:
-        skip_to_new_line();
-        Statement *stmt=new ErrorStatement(line,error_str);
-        if(pre)pre->set_next(stmt);
-        program.insert(line,stmt);
-        pre=stmt;
-        parse_error_flag=true;
+    //add to highlights
+    highlights.emplace_back(QPair<int,QColor>(pcur,QColor(255,100,100)));
+    skip_to_new_line();
+    Statement *stmt=new ErrorStatement(line,error_str);
+    if(pre)pre->set_next(stmt);
+    program.insert(line,stmt);
+    pre=stmt;
+    parse_error_flag=true;
 }
 
 Expression* get_parse_exp(){

@@ -25,6 +25,11 @@ QString cmd_for_immediate_exec;
 QWaitCondition cond;
 QMutex mut;
 //QMutex cmd_mutex;
+
+//for syntax highlight
+QList<QTextEdit::ExtraSelection> extras;
+QList<QPair<unsigned int,QColor>> highlights;
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -173,6 +178,7 @@ void MainWindow::on_btnClearCode_clicked()
     ui->resDisplay->clear();
     ui->treeDisplay->clear();
     ui->codeDisplay->clear();
+    ui->debugDisplay->clear();
 }
 
 // load the code file
@@ -255,10 +261,29 @@ string var_input(Ui::MainWindow*ui){
     return str.toStdString().substr(low,high-low+1);
 }
 
+void syntax_highlight(Ui::MainWindow*ui){
+    QTextBrowser *code=ui->codeDisplay;
+    QTextCursor cursor(code->document());
+    for(auto &line:highlights){
+        QTextEdit::ExtraSelection h;
+        h.cursor=cursor;
+        h.cursor.setPosition(line.first);
+        h.cursor.movePosition(QTextCursor::StartOfLine);
+        h.cursor.movePosition(QTextCursor::EndOfLine);
+        h.format.setProperty(QTextFormat::FullWidthSelection,true);
+        h.format.setBackground(line.second);
+        extras.append(h);
+    }
+    code->setExtraSelections(extras);
+}
+
+
 void ExecThread::run(){
 
     /*begin of ui operation*/
     program.clear();
+    extras.clear();
+    highlights.clear();
     //LET PRINT INPUT
     if(Exec_Immediate)code_text="1 "+cmd_for_immediate_exec.toStdString();
     else code_text=ui->codeDisplay->document()->toPlainText().toStdString();
@@ -347,6 +372,11 @@ void MainWindow::on_btnDebugStep_clicked()
 //TODO:show the runtime variable
 void DebugThread::run(){
     if(!program.is_debug()){
+        //firstly enter debug mode
+        program.clear();
+        extras.clear();
+        highlights.clear();
+
         code_text=ui->codeDisplay->document()->toPlainText().toStdString();
         //initial the scanner;
         pcur=0;
