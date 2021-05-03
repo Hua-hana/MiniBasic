@@ -41,7 +41,8 @@ Statement* PrintFStatement::eval(EvalContext &state) const{
     int off=0;
     unsigned int args_p=0;
     int size=format.size();
-    for(int i=0;i<size;++i){
+    int i=0;
+    while(i<size){
         if(format[i]=='{'){
             if(i+1>=size||format[i+1]!='}')throw Exec_Exception("Runtime Error: Invalid single { !");
             ans.append(format.substr(off,i-off));
@@ -64,6 +65,7 @@ Statement* PrintFStatement::eval(EvalContext &state) const{
             i+=2;
             continue;
         }
+        ++i;
     }
     ans.append(format.substr(off,size-off));
     res_output.append(ans+"\n");
