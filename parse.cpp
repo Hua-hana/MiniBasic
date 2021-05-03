@@ -110,6 +110,9 @@ void parse_statement(int line){
         program.insert(line,stmt);
         pre=stmt;
     }
+    else if(token_t==PRINTF){
+
+    }
     else throw Parse_Exception("Parse Error: LINE "+to_string(line)+", unrecognized command!");
     }
     catch (Parse_Exception e){
@@ -365,79 +368,3 @@ void parse_exp1(bool minus_is_valid){
     throw Parse_Exception(EXP_ERROR);
 }
 
-/*
-Expression* parse_exp2(){
-    int token_t=code_scanner();
-    if(token_t==ID){
-        string c=lookahead2();
-        if(c=="**!"){
-            Expression*lhs=new IdentifierExp(token_attr.id);
-            code_scanner();
-            Expression*rhs=parse_exp();
-            Expression*ret=new CompoundExp(lhs,rhs,c);
-            return ret;
-        }
-        else {
-            Expression *ret=new IdentifierExp(token_attr.id);
-            return ret;
-        }
-    }
-    if(token_t==NUM){
-        string c=lookahead2();
-        if(c=="**!"){
-            Expression*lhs=new ConstantExp(token_attr.num);
-            code_scanner();
-            Expression*rhs=parse_exp();
-            Expression*ret=new CompoundExp(lhs,rhs,c);
-            return ret;
-        }
-        else {
-            Expression *ret=new ConstantExp(token_attr.num);
-            return ret;
-        }
-    }
-    if(token_t=='('){
-        Expression*lhs=parse_exp();
-        token_t=code_scanner();
-        if(token_t==')'){
-            string c=lookahead2();
-            if(c=="**!"){
-                code_scanner();
-                Expression*rhs=parse_exp2();
-                Expression*ret=new CompoundExp(lhs,rhs,c);
-                return ret;
-            }
-            else return lhs;
-        }
-        else assert(false);
-    }
-    assert(false);
-    return NULL;
-}
-*/
-/*
-Expression* parse_exp1(){
-    Expression* lhs=parse_exp2();
-    string c=lookahead1();
-    if(c=="*"||c=="/!"){
-        code_scanner();
-        Expression*rhs=parse_exp1();
-        Expression*ret=new CompoundExp(lhs,rhs,c);
-        return ret;
-    }
-    else return lhs;
-}
-*/
-/*
-Expression* parse_exp(){
-    Expression* lhs=parse_exp1();
-    string c=lookahead1();
-    if(c=="+"||c=="-!"){
-        code_scanner();
-        Expression*rhs=parse_exp1();
-        Expression*ret=new CompoundExp(lhs,rhs,c);
-        return ret;
-    }
-    else return lhs;
-}
-*/

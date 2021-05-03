@@ -221,7 +221,8 @@ void MainWindow::on_btnRunCode_clicked()
 }
 
 //wait for the input
-int var_input(Ui::MainWindow*ui){
+//return a string, can be transform to int or string
+string var_input(Ui::MainWindow*ui){
     st=WAIT_INPUT;
     //QEventLoop loop;
 
@@ -230,16 +231,6 @@ int var_input(Ui::MainWindow*ui){
     mut.lock();
     cond.wait(&mut);
     mut.unlock();
-
-
-
-    //QTimer::singleShot(3000,&loop,SLOT(quit()));
-    //loop.connect(ui->cmdLineEdit,SIGNAL(ui->cmdLineEdit->blockCountChanged),&loop,SLOT(loop.exit()));
-    //loop.connect(ui,SIGNAL(input_finished),&loop,SLOT(quit()));
-
-    //connect(this,&MainWindow::input_finished,&loop,&QEventLoop::quit);
-    //loop.exec();
-
 
     int curBlockCount=ui->cmdLineEdit->blockCount()-1;
     QTextDocument* doc=ui->cmdLineEdit->document();
@@ -255,10 +246,8 @@ int var_input(Ui::MainWindow*ui){
     if(str[high]<'0'||str[high]>'9')throw Exec_Exception("Runtime Error: input invalid");
     while(str[high]>='0'&&str[high]<='9')++high;
 
-    int ret=std::atoi(str.toStdString().substr(low,high).c_str());
-
     st=CMDING;
-    return ret;
+    return str.toStdString().substr(low,high);
 }
 
 void ExecThread::run(){

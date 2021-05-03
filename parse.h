@@ -18,7 +18,8 @@ enum tokentype{
     NUM=266,
     ID=267,
     ERROR=268,
-    EXPO=269
+    EXPO=269,
+    PRINTF=270
 };
 
 #define REM 258
@@ -33,9 +34,10 @@ enum tokentype{
 #define ID 267
 #define ERROR 268
 #define EXPO 269
+#define PRINTF 270
 typedef struct Token_attribute{
     int num;
-    string id;
+    string id;//also used for string value,to reduce the memory consume
     string error_msg;
     string comment;
 } Token_attribute;
