@@ -203,12 +203,14 @@ void MainWindow::on_btnLoadCode_clicked()
 
 //execute the code
 void MainWindow::on_btnRunCode_clicked()
-{
-    //clear the last result
-    ui->resDisplay->clear();
-    ui->treeDisplay->clear();
-    ui->debugDisplay->clear();
-
+{   if(!program.is_debug()){
+        //clear the last result
+        ui->resDisplay->clear();
+        ui->treeDisplay->clear();
+        ui->debugDisplay->clear();
+        program.set_debug(false);
+    }
+    //if debug mode click the run, do not clear!
     ExecThread *thread=new ExecThread(NULL);
     connect(thread,&QThread::finished
                 ,thread,&QObject::deleteLater);
@@ -216,6 +218,8 @@ void MainWindow::on_btnRunCode_clicked()
             this,&MainWindow::set_res_output);
     connect(thread,&ExecThread::send_ast,
             this,&MainWindow::set_ast);
+    connect(thread,&ExecThread::send_curvar,
+            this,&MainWindow::set_curvar);
     thread->set_ui(ui);
     thread->start();
 
@@ -292,7 +296,7 @@ void ExecThread::run(){
         emit send_res_output(e.str);
         return;
     }
-
+    emit send_curvar(program.generate_curvar());
     emit send_res_output(res_output);
 
 
@@ -307,6 +311,13 @@ void MainWindow::set_res_output(string res){
 
 void MainWindow::set_ast(string ast_res){
     QString str=QString::fromStdString(ast_res);
+    ui->treeDisplay->insertPlainText(str);
+}
+
+void MainWindow::set_curvar(string curvar){
+    //because it regenerate every time, so it need to clear
+    ui->debugDisplay->clear();
+    QString str=QString::fromStdString(curvar);
     ui->treeDisplay->insertPlainText(str);
 }
 
@@ -326,6 +337,8 @@ void MainWindow::on_btnDebugStep_clicked()
             this,&MainWindow::set_res_output);
     connect(thread,&DebugThread::send_ast,
             this,&MainWindow::set_ast);
+    connect(thread,&DebugThread::send_curvar,
+            this,&MainWindow::set_curvar);
     thread->set_ui(ui);
     thread->start();
 }
@@ -368,6 +381,7 @@ void DebugThread::run(){
     }
     //exec also generate ast for current code
     emit send_ast(ast);
+    emit send_curvar(program.generate_curvar());
     emit send_res_output(res_output);
 
 }

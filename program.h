@@ -33,6 +33,7 @@ public:
     Ui::MainWindow* get_ui(){return ui;}
     void exec();
     void generate_ast();
+    string generate_curvar();
     void clear();
     bool is_empty(){
         return bitmap.empty();

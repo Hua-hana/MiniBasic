@@ -36,6 +36,19 @@ public:
     int type(const string &k){
         return state_type.at(k);
     }
+
+    string show_variable(){
+        string ret="";
+        for(auto &var:state_type){
+            if(var.second==INT_TYPE){
+                ret+=var.first+" : INT = "+to_string(state_int.at(var.first))+"\n";
+            }
+            else{
+                ret+=var.first+" : STR = \""+state_str.at(var.first)+"\"\n";
+            }
+        }
+        return ret;
+    }
 };
 
 

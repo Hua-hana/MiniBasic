@@ -11,6 +11,7 @@ class ExecThread:public QThread{
 signals:
     void send_res_output(string);
     void send_ast(string);
+    void send_curvar(string);
 public:
     ExecThread(QObject* par):QThread(par){}
     ~ExecThread(){qDebug() << "ExecThread::~ExecThread()";}
@@ -28,6 +29,7 @@ class DebugThread:public QThread{
 signals:
     void send_res_output(string);
     void send_ast(string);
+    void send_curvar(string);
 public:
     DebugThread(QObject* par):QThread(par){}
     ~DebugThread(){qDebug() << "ExecThread::~ExecThread()";}

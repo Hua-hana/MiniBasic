@@ -33,6 +33,8 @@ public slots:
     void set_res_output(std::string res);
 
     void set_ast(std::string ast);
+
+    void set_curvar(std::string curvar);
 private:
     Ui::MainWindow *ui;
 };
