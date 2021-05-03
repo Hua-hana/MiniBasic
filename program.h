@@ -14,8 +14,10 @@ class Program{
 private:
     map<int,Statement*>bitmap;
     Ui::MainWindow* ui;
+    bool debug;
+    Statement* debug_cur;
 public:
-    Program(){}
+    Program(){debug=false;debug_cur=nullptr;}
     ~Program();
     void insert(int line,Statement* sta){
         bitmap.insert(pair<int,Statement*>(line,sta));
@@ -26,6 +28,8 @@ public:
         return ret->second;
     }
     void set_ui(Ui::MainWindow*u){ui=u;}
+    void set_debug(bool flag){debug=flag;}
+    bool is_debug(){return debug;}
     Ui::MainWindow* get_ui(){return ui;}
     void exec();
     void generate_ast();

@@ -23,5 +23,22 @@ private:
     Ui::MainWindow* ui;
 };
 
+class DebugThread:public QThread{
+    Q_OBJECT
+signals:
+    void send_res_output(string);
+    void send_ast(string);
+public:
+    DebugThread(QObject* par):QThread(par){}
+    ~DebugThread(){qDebug() << "ExecThread::~ExecThread()";}
+    void set_ui(Ui::MainWindow* u){
+        ui=u;
+    }
+    void run();
+
+private:
+    Ui::MainWindow* ui;
+};
+
 
 #endif // EXECTHREAD_H

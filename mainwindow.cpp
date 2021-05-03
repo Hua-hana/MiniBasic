@@ -204,6 +204,10 @@ void MainWindow::on_btnLoadCode_clicked()
 //execute the code
 void MainWindow::on_btnRunCode_clicked()
 {
+    //clear the last result
+    ui->resDisplay->clear();
+    ui->treeDisplay->clear();
+    ui->debugDisplay->clear();
 
     ExecThread *thread=new ExecThread(NULL);
     connect(thread,&QThread::finished
@@ -248,6 +252,7 @@ string var_input(Ui::MainWindow*ui){
 }
 
 void ExecThread::run(){
+
     /*begin of ui operation*/
     program.clear();
     //LET PRINT INPUT
@@ -258,6 +263,8 @@ void ExecThread::run(){
     pcur=0;
     //set the ui in program
     program.set_ui(ui);
+    //set the debug flag
+    program.set_debug(false);
     st=CMDING;
 
     /*end of ui operation */
@@ -291,21 +298,76 @@ void ExecThread::run(){
 
 }
 
+//clear operation can be done in the runcode btn slot
 void MainWindow::set_res_output(string res){
     /*begin of ui operation*/
-    ui->resDisplay->clear();
     QString str=QString::fromStdString(res);
     ui->resDisplay->insertPlainText(str);
 }
 
 void MainWindow::set_ast(string ast_res){
     QString str=QString::fromStdString(ast_res);
-    ui->treeDisplay->clear();
     ui->treeDisplay->insertPlainText(str);
 }
 
-
+//similar to on_btnRunCode_clicked
 void MainWindow::on_btnDebugStep_clicked()
 {
+    if(!program.is_debug()){
+        ui->resDisplay->clear();
+        ui->treeDisplay->clear();
+        ui->debugDisplay->clear();
+    }
+
+    DebugThread *thread=new DebugThread(NULL);
+    connect(thread,&QThread::finished
+                ,thread,&QObject::deleteLater);
+    connect(thread,&DebugThread::send_res_output,
+            this,&MainWindow::set_res_output);
+    connect(thread,&DebugThread::send_ast,
+            this,&MainWindow::set_ast);
+    thread->set_ui(ui);
+    thread->start();
+}
+
+//mostly the same as ExecThread::run, do one time parsing
+//TODO:show the runtime variable
+void DebugThread::run(){
+    if(!program.is_debug()){
+        code_text=ui->codeDisplay->document()->toPlainText().toStdString();
+        //initial the scanner;
+        pcur=0;
+        //set the ui in program
+        program.set_ui(ui);
+        //set the debug flag
+        program.set_debug(true);
+        st=CMDING;
+
+        try{
+            parse();
+        }
+        catch(Parse_Exception e){
+            //need to show the ast
+            program.generate_ast();
+            //display the error message in resDisplay
+            emit send_res_output(e.str);
+            emit send_ast(ast);
+            return;
+        }
+    }
+    if(program.is_empty())return;
+
+    //program.generate_ast(); no need to generate
+    //emit send_ast(ast);
+    try {
+        program.exec();
+    }
+    catch(Exec_Exception e){
+        emit send_res_output(e.str);
+        return;
+    }
+    //exec also generate ast for current code
+    emit send_ast(ast);
+    emit send_res_output(res_output);
 
 }

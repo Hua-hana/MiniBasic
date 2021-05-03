@@ -20,6 +20,7 @@ public:
     Statement(int line=0):next(NULL),line(line){}
     virtual ~Statement(){}
     void set_next(Statement*n){next=n;}
+    int get_line(){return line;}
     Statement* get_next(){return next;}
     virtual string to_ast()const=0;
     virtual Statement* eval(EvalContext &state)const=0;
