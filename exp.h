@@ -5,9 +5,9 @@
 #include<cassert>
 #include"exception.h"
 
-enum ExpType{Constant,Identifier,Compound};
+enum ExpType{Constant,Identifier,Compound,ConstantStr,IdentifierStr,CompoundStr};
 
-template<class K,class V>
+
 class EvalContext;
 class Exec_Exception;
 
@@ -15,7 +15,8 @@ class Expression{
 public:
     Expression(){}
     virtual ~Expression(){}
-    virtual int eval(EvalContext<string,int>& state)const=0;
+    virtual int eval_int(EvalContext& state)const=0;
+    virtual string eval_str(EvalContext& state)const=0;
     virtual string to_ast(string & tab)const=0;
     virtual ExpType type()const=0;
     virtual string getIdentifierName()const=0;
@@ -31,8 +32,11 @@ private:
 public:
     ConstantExp(int val=0):value(val){}
     virtual ~ConstantExp(){}
-    virtual int eval(EvalContext<string,int>&)const{
+    virtual int eval_int(EvalContext&)const{
         return value;
+    }
+    virtual string eval_str(EvalContext&)const{
+        return "";
     }
     virtual string to_ast(string & tab)const{
         return tab + std::to_string(value);
@@ -45,16 +49,43 @@ public:
     virtual string getIdentifierName()const{return "";}
 };
 
+class ConstantStrExp: public Expression{
+private:
+    string value;
+
+public:
+    ConstantStrExp(string val=""):value(val){}
+    virtual ~ConstantStrExp(){}
+    virtual int eval_int(EvalContext&)const{
+        return 0;
+    }
+    virtual string eval_str(EvalContext&)const{
+        return value;
+    }
+    virtual string to_ast(string & tab)const{
+        return tab + "\""+value+"\"";
+    }
+    virtual ExpType type()const{
+        return ConstantStr;
+    }
+    virtual Expression* getLHS()const{return NULL;}
+    virtual Expression* getRHS()const{return NULL;}
+    virtual string getIdentifierName()const{return "";}
+};
+
 class IdentifierExp:public Expression{
 private:
     string id;
 public:
     IdentifierExp(string str=""):id(str){}
     virtual ~IdentifierExp(){}
-    virtual int eval(EvalContext<string,int>&st)const{
+    virtual int eval_int(EvalContext&st)const{
         //FIXME
-        if(!st.is_defined(id))throw Exec_Exception("Runtime Error: use undefined variable");
-        return st.get(id);
+        if(!st.is_defined_int(id))throw Exec_Exception("Runtime Error: use undefined variable");
+        return st.get_int(id);
+    }
+    virtual string eval_str(EvalContext&)const{
+        return "";
     }
     virtual string to_ast(string & tab)const{
         return tab + id;
@@ -67,6 +98,31 @@ public:
     virtual string getIdentifierName()const{return id;}
 };
 
+class IdentifierStrExp:public Expression{
+private:
+    string id;
+public:
+    IdentifierStrExp(string str=""):id(str){}
+    virtual ~IdentifierStrExp(){}
+    virtual int eval_int(EvalContext&)const{
+        return 0;
+    }
+    virtual string eval_str(EvalContext&st)const{
+        if(!st.is_defined_str(id))throw Exec_Exception("Runtime Error: use undefined variable");
+        return st.get_str(id);
+    }
+    virtual string to_ast(string & tab)const{
+        return tab + id;
+    }
+    virtual ExpType type()const{
+        return IdentifierStr;
+    }
+    virtual Expression* getLHS()const{return NULL;}
+    virtual Expression* getRHS()const{return NULL;}
+    virtual string getIdentifierName()const{return id;}
+};
+
+
 class CompoundExp:public Expression{
 private:
     Expression* lhs,*rhs;
@@ -75,7 +131,10 @@ public:
     CompoundExp(Expression* lhs=NULL,Expression*rhs=NULL,string op=""):
         lhs(lhs),rhs(rhs),op(op){}
     virtual ~CompoundExp(){}
-    virtual int eval(EvalContext<string,int>& state)const;
+    virtual int eval_int(EvalContext& state)const;
+    virtual string eval_str(EvalContext&)const{
+        return "";
+    }
     virtual string to_ast(string & tab)const;
     virtual ExpType type()const{
         return Compound;
@@ -90,5 +149,31 @@ public:
     virtual string getIdentifierName()const{return "";}
 };
 
+
+class CompoundStrExp:public Expression{
+private:
+    Expression* lhs,*rhs;
+    string  op;
+public:
+    CompoundStrExp(Expression* lhs=NULL,Expression*rhs=NULL,string op=""):
+        lhs(lhs),rhs(rhs),op(op){}
+    virtual ~CompoundStrExp(){}
+    virtual int eval_int(EvalContext&)const{
+        return 0;
+    }
+    virtual string eval_str(EvalContext& state)const;
+    virtual string to_ast(string & tab)const;
+    virtual ExpType type()const{
+        return CompoundStr;
+    }
+
+    virtual Expression* getLHS()const{
+        return lhs;
+    }
+    virtual Expression* getRHS()const{
+        return rhs;
+    }
+    virtual string getIdentifierName()const{return "";}
+};
 
 #endif // EXP_H

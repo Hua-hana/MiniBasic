@@ -2,7 +2,7 @@
 
 string res_output;
 string ast;
-EvalContext<string,int> state;
+EvalContext state;
 extern bool Exec_Immediate;
 void Program::exec(){
     res_output="";
