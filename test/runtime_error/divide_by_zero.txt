@@ -1,0 +1,4 @@
+100 REM Divide by zero
+110 LET n1=3
+120 LET n2=0
+130 LET n3=n1/n2

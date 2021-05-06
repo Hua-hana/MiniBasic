@@ -5,17 +5,21 @@
 #include"statement.h"
 #include"mainwindow.h"
 #include"exception.h"
+#include"ExecThread.h"
 using namespace std;
 
 class Exec_Exception;
 class Statement;
-
+class ExecThread;
+class DebugThread;
 class Program{
 private:
     map<int,Statement*>bitmap;
     Ui::MainWindow* ui;
     bool debug;
     Statement* debug_cur;
+    ExecThread* run_thread;
+    DebugThread* debug_thread;
 public:
     Program(){debug=false;debug_cur=nullptr;}
     ~Program();
@@ -29,6 +33,8 @@ public:
     }
     void set_ui(Ui::MainWindow*u){ui=u;}
     void set_debug(bool flag){debug=flag;}
+    void set_run_thread(ExecThread*thre){run_thread=thre;}
+    void set_debug_thread(DebugThread*thre){debug_thread=thre;}
     bool is_debug(){return debug;}
     Ui::MainWindow* get_ui(){return ui;}
     int exec();

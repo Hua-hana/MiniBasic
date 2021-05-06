@@ -1,0 +1,9 @@
+100 REM print loop
+110 LET count=3
+120 IF count<1 THEN 180
+130 PRINTF "Input the value:"
+140 INPUT n
+150 PRINTF "n * 2 = {}\nn * 3 = {}", n*2, n*3
+160 LET count=count-1
+170 GOTO 120
+180 END

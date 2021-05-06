@@ -11,7 +11,6 @@ class Program;
 extern string res_output;
 extern Program program;
 
-
 class Statement{
 protected:
     Statement *next;

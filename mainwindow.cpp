@@ -4,7 +4,6 @@
 #include<QString>
 #include<QFileDialog>
 #include<string>
-#include<QTimer>
 #include"parse.h"
 #include"program.h"
 #include<ExecThread.h>
@@ -143,7 +142,7 @@ QTextCursor search_line_cursor(Ui::MainWindow* ui,int line){
 //codeDisplay will be updated
 void MainWindow::on_cmdLineEdit_blockCountChanged(int newBlockCount)
 {
-    ui->resDisplay->clear();//clear the error message
+    //ui->resDisplay->clear();//clear the error message ???
     static int prev_block_count=0;
     if(st==WAIT_INPUT){
         cond.wakeAll();
@@ -289,9 +288,19 @@ string var_input(Ui::MainWindow*ui){
 
     ui->cmdLineEdit->insertPlainText("? ");
 
+    ui->btnClearCode->setEnabled(false);
+    ui->btnDebugStep->setEnabled(false);
+    ui->btnLoadCode->setEnabled(false);
+    ui->btnRunCode->setEnabled(false);
+
     mut.lock();
     cond.wait(&mut);
     mut.unlock();
+
+    ui->btnClearCode->setEnabled(true);
+    ui->btnDebugStep->setEnabled(true);
+    ui->btnLoadCode->setEnabled(true);
+    ui->btnRunCode->setEnabled(true);
 
     int curBlockCount=ui->cmdLineEdit->blockCount()-1;
     QTextDocument* doc=ui->cmdLineEdit->document();
@@ -327,7 +336,6 @@ void syntax_highlight(Ui::MainWindow*ui){
 
 void syntax_highlight_remove_line(Ui::MainWindow*ui,int line){
     auto code=ui->codeDisplay;
-    QList<QTextEdit::ExtraSelection> extra;
     auto cursor=search_line_cursor(ui,line);
     QTextEdit::ExtraSelection h;
     h.cursor=cursor;
@@ -335,13 +343,19 @@ void syntax_highlight_remove_line(Ui::MainWindow*ui,int line){
     h.cursor.movePosition(QTextCursor::EndOfLine);
     h.format.setProperty(QTextFormat::FullWidthSelection,true);
     h.format.clearBackground();
-    extra.append(h);
-    code->setExtraSelections(extra);
+    int loc=0;
+    for(auto &extra:extras){
+        if(extra.cursor==h.cursor){
+            extras.remove(loc);
+            break;
+        }
+        ++loc;
+    }
+    code->setExtraSelections(extras);
 }
 
 void syntax_highlight_line(Ui::MainWindow*ui,int line){
     auto code=ui->codeDisplay;
-    QList<QTextEdit::ExtraSelection> extra;
     auto cursor=search_line_cursor(ui,line);
     QTextEdit::ExtraSelection h;
     h.cursor=cursor;
@@ -349,8 +363,8 @@ void syntax_highlight_line(Ui::MainWindow*ui,int line){
     h.cursor.movePosition(QTextCursor::EndOfLine);
     h.format.setProperty(QTextFormat::FullWidthSelection,true);
     h.format.setBackground(QColor(100,255,100));
-    extra.append(h);
-    code->setExtraSelections(extra);
+    extras.append(h);
+    code->setExtraSelections(extras);
 }
 
 void ExecThread::run(){
@@ -367,6 +381,7 @@ void ExecThread::run(){
     pcur=0;
     //set the ui in program
     program.set_ui(ui);
+    program.set_run_thread(this);
     //set the debug flag
     program.set_debug(false);
     st=CMDING;
@@ -398,8 +413,8 @@ parse_finished:
         emit send_res_output(e.str);
         return;
     }
-    emit send_curvar(program.generate_curvar());
-    emit send_res_output(res_output);
+    //emit send_curvar(program.generate_curvar());
+    //emit send_res_output(res_output);
 
 }
 
@@ -473,14 +488,25 @@ void DebugThread::run(){
             //need to show the ast
             program.generate_ast();
             //display the error message in resDisplay
-            emit send_res_output(e.str);
-            emit send_ast(ast);
+//            emit send_res_output(e.str);
+//            emit send_ast(ast);
             syntax_highlight(ui);
-            return;
+//            program.set_debug(false);
+//            ui->btnLoadCode->setEnabled(true);
+//            ui->btnClearCode->setEnabled(true);
+//            return;
         }
     }
-    if(program.is_empty())return;
+    //attention! every time it would generate a new thread!
+    //this pointer is different!
+    program.set_debug_thread(this);
 
+    if(program.is_empty()){
+        program.set_debug(false);
+        ui->btnLoadCode->setEnabled(true);
+        ui->btnClearCode->setEnabled(true);
+        return;
+    }
     //program.generate_ast(); no need to generate
     //emit send_ast(ast);
 
@@ -495,14 +521,16 @@ void DebugThread::run(){
         }
     }
     catch(Exec_Exception e){
-        emit send_debug_message("Runtime Error!");
+        emit send_debug_message(e.str);
         emit send_res_output(e.str);
+        program.set_debug(false);
+        ui->btnLoadCode->setEnabled(true);
+        ui->btnClearCode->setEnabled(true);
         return;
     }
     //exec also generate ast for current code
     emit send_ast(ast);
-    emit send_curvar(program.generate_curvar());
-    emit send_res_output(res_output);
+    //emit send_curvar(program.generate_curvar());
 
 }
 
@@ -510,3 +538,4 @@ void MainWindow::debug_message(std::string message){
     QString str=QString::fromStdString(message);
     QMessageBox::information(this,"Information",str,QMessageBox::Ok | QMessageBox::Cancel);
 }
+

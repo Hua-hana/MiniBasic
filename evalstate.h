@@ -49,6 +49,11 @@ public:
         }
         return ret;
     }
+    void clear(){
+        state_int.clear();
+        state_str.clear();
+        state_type.clear();
+    }
 };
 
 

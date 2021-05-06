@@ -21,6 +21,9 @@ int Program::exec(){
         while(cur){
             auto next=cur->eval(state);
             cur=next;
+            emit run_thread->send_curvar(generate_curvar());
+            emit run_thread->send_res_output(res_output);
+            res_output="";
         }
         return 0;
     }
@@ -29,15 +32,22 @@ int Program::exec(){
     else{
         if(!debug_cur){
             debug_cur=bitmap.begin()->second;
+            if(debug_cur->type()==Err)throw Exec_Exception("There is syntax error in this line!");
+            ast=debug_cur->to_ast();
             syntax_highlight_line(ui,debug_cur->get_line());
             return 1;
         }
         else{
-            syntax_highlight_remove_line(ui,debug_cur->get_line());
-            ast=debug_cur->to_ast();
+            if(debug_cur->type()==Err)throw Exec_Exception("There is syntax error in this line!");
             auto next=debug_cur->eval(state);
+            syntax_highlight_remove_line(ui,debug_cur->get_line());
+            emit debug_thread->send_curvar(generate_curvar());
+            emit debug_thread->send_res_output(res_output);
+            res_output="";
+
             if(next){
                 debug_cur=next;
+                ast=debug_cur->to_ast();
                 syntax_highlight_line(ui,debug_cur->get_line());
                 return 1;
             }
@@ -80,5 +90,6 @@ void Program::clear(){
         Statement* del=iter.second;
         delete del;
     }
+    state.clear();
     bitmap.clear();
 }

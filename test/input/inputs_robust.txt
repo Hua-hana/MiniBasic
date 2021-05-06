@@ -1,0 +1,2 @@
+100 INPUTS n
+110 PRINTF "n={}",n

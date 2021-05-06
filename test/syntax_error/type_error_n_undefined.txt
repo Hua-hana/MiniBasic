@@ -1,0 +1,5 @@
+100 REM n1:type error n2:undefined but used
+110 LET n1="haha"
+120 LET foo=n1+3
+130 LET bar=n2
+140 END

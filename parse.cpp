@@ -2,11 +2,12 @@
 #include<stack>
 #include<exception.h>
 
-#define EXP_ERROR "Parse Error: LINE "+to_string(cur_line)+", expression is illegal!"
+#define THROW_EXP_ERROR do{clear_stack();throw Parse_Exception("Parse Error: LINE "+to_string(cur_line)+", expression is illegal!");}while(false)
 
 //when parse error happen, add line to the highlights
 extern QList<QPair<unsigned int,QColor>> highlights;
 extern unsigned int pcur;//for the highlights
+map<string,int> type_inference;
 
 static Statement*pre=NULL;
 
@@ -26,6 +27,7 @@ int cur_line;//for error handling
 
 bool parse_error_flag=false;
 
+
 //last time error should be handled
 void init_for_parse(){
     pre=NULL;
@@ -33,8 +35,13 @@ void init_for_parse(){
     while(!exp_stack.empty())exp_stack.pop();
 }
 
+void clear_stack(){
+    while(!exp_stack.empty())exp_stack.pop();
+    while(!op_stack.empty())op_stack.pop();
+}
 
 void parse(){
+    type_inference.clear();
     parse_error_flag=false;
     init_for_parse();
     while(true){
@@ -79,6 +86,7 @@ void parse_statement(int line){
         token_t=lookahead1();
         if(token_t!=ID)throw Parse_Exception("Parse Error: LINE "+to_string(line)+", ID should follow INPUT!");
         code_scanner();
+        type_inference.insert_or_assign(token_attr.id,INT_TYPE);
         Statement* stmt=new InputStatement(token_attr.id,line);
         if(pre)pre->set_next(stmt);
         program.insert(line,stmt);
@@ -95,14 +103,14 @@ void parse_statement(int line){
     }
     else if(token_t==IF){
         parse_exp();
-        Expression* rhs=get_parse_exp();
+        Expression* lhs=get_parse_exp();
         token_t=lookahead1();
         if(!(token_t=='<'||token_t=='='||token_t=='>'))
             throw Parse_Exception("Parse Error: LINE "+to_string(line)+", operator is illegal!");
         code_scanner();
         string op=optoken_to_string(token_t);
         parse_exp();
-        Expression* lhs=get_parse_exp();
+        Expression* rhs=get_parse_exp();
         token_t=lookahead1();
         if(token_t!=THEN)
             throw Parse_Exception("Parse Error: LINE "+to_string(line)+", expecting the 'THEN'!");
@@ -145,6 +153,7 @@ void parse_statement(int line){
     else if(token_t==INPUTS){
         token_t=code_scanner();
         if(token_t!=ID)throw Parse_Exception("Parse Error: LINE "+to_string(line)+", ID should follow INPUTS!");
+        type_inference.insert_or_assign(token_attr.id,STR_TYPE);
         Statement* stmt=new InputStrStatement(token_attr.id,line);
         if(pre)pre->set_next(stmt);
         program.insert(line,stmt);
@@ -175,9 +184,9 @@ parse_error:
 
 Expression* get_parse_exp(){
     if(exp_stack.size()!=1)
-        throw Parse_Exception(EXP_ERROR);
+        THROW_EXP_ERROR;
     if(!op_stack.empty())
-        throw Parse_Exception(EXP_ERROR);
+        THROW_EXP_ERROR;
     Expression *exp=exp_stack.top();
     exp_stack.pop();
     return exp;
@@ -188,7 +197,8 @@ Expression* parse_assign(){
     string op="";
     int token_t=code_scanner();
     if(token_t==ID){
-        lhs=new IdentifierExp(token_attr.id);
+        string id=token_attr.id;
+        lhs=new IdentifierExp(id);
         token_t=code_scanner();
         if(token_t=='='){
             op="=";
@@ -197,13 +207,19 @@ Expression* parse_assign(){
             rhs=get_parse_exp();
             Expression* ret;
             //if the rhs is a string
-            if(token_t!=STR)ret=new CompoundExp(lhs,rhs,op);
-            else ret=new CompoundStrExp(lhs,rhs,op);
+            if(token_t!=STR){
+                type_inference.insert_or_assign(id,INT_TYPE);
+                ret=new CompoundExp(lhs,rhs,op);
+            }
+            else {
+                type_inference.insert_or_assign(id,STR_TYPE);
+                ret=new CompoundStrExp(lhs,rhs,op);
+            }
             return ret;
         }
-        else throw Parse_Exception(EXP_ERROR);
+        else THROW_EXP_ERROR;
     }
-    else throw Parse_Exception(EXP_ERROR);
+    else THROW_EXP_ERROR;
     return NULL;
 }
 bool isexp_token(int t){
@@ -239,12 +255,12 @@ bool precedence_less(int l,int r){
 void consume_the_stack(){
     while(!op_stack.empty()){
         int top_op=op_stack.top();
-        if(!isop(top_op))throw Parse_Exception(EXP_ERROR);
+        if(!isop(top_op))THROW_EXP_ERROR;
         op_stack.pop();
-        if(exp_stack.empty())throw Parse_Exception(EXP_ERROR);
+        if(exp_stack.empty())THROW_EXP_ERROR;
         Expression* rhs=exp_stack.top();
         exp_stack.pop();
-        if(exp_stack.empty())throw Parse_Exception(EXP_ERROR);
+        if(exp_stack.empty())THROW_EXP_ERROR;
         Expression*lhs=exp_stack.top();
         exp_stack.pop();
         Expression* compound=new CompoundExp(lhs,rhs,optoken_to_string(top_op));
@@ -270,7 +286,7 @@ void parse_exp(bool minus_is_valid){
         // not the end of expression
         if(token_t==')')return;
         consume_the_stack();
-        if(exp_stack.size()!=1)throw Parse_Exception(EXP_ERROR);
+        if(exp_stack.size()!=1)THROW_EXP_ERROR;
         return;
     }
     code_scanner();
@@ -281,10 +297,10 @@ void parse_exp(bool minus_is_valid){
                 int top_op=op_stack.top();
                 if(!isop(top_op))break;
                 op_stack.pop();
-                if(exp_stack.empty())throw Parse_Exception(EXP_ERROR);
+                if(exp_stack.empty())THROW_EXP_ERROR;
                 Expression* rhs=exp_stack.top();
                 exp_stack.pop();
-                if(exp_stack.empty())throw Parse_Exception(EXP_ERROR);
+                if(exp_stack.empty())THROW_EXP_ERROR;
                 Expression*lhs=exp_stack.top();
                 exp_stack.pop();
                 Expression* compound=new CompoundExp(lhs,rhs,optoken_to_string(top_op));
@@ -302,10 +318,10 @@ void parse_exp(bool minus_is_valid){
                 int top_op=op_stack.top();
                 if(!isop(top_op))break;
                 op_stack.pop();
-                if(exp_stack.empty())throw Parse_Exception(EXP_ERROR);
+                if(exp_stack.empty())THROW_EXP_ERROR;
                 Expression* rhs=exp_stack.top();
                 exp_stack.pop();
-                if(exp_stack.empty())throw Parse_Exception(EXP_ERROR);
+                if(exp_stack.empty())THROW_EXP_ERROR;
                 Expression*lhs=exp_stack.top();
                 exp_stack.pop();
                 Expression* compound=new CompoundExp(lhs,rhs,optoken_to_string(top_op));
@@ -323,10 +339,10 @@ void parse_exp(bool minus_is_valid){
                 if(!isop(top_op))break;
                 if(precedence_less(top_op,token_t))break;
                 op_stack.pop();
-                if(exp_stack.empty())throw Parse_Exception(EXP_ERROR);
+                if(exp_stack.empty())THROW_EXP_ERROR;
                 Expression* rhs=exp_stack.top();
                 exp_stack.pop();
-                if(exp_stack.empty())throw Parse_Exception(EXP_ERROR);
+                if(exp_stack.empty())THROW_EXP_ERROR;
                 Expression*lhs=exp_stack.top();
                 exp_stack.pop();
                 Expression* compound=new CompoundExp(lhs,rhs,optoken_to_string(top_op));
@@ -344,10 +360,10 @@ void parse_exp(bool minus_is_valid){
                 if(!isop(top_op))break;
                 if(precedence_less(top_op,token_t))break;
                 op_stack.pop();
-                if(exp_stack.empty())throw Parse_Exception(EXP_ERROR);
+                if(exp_stack.empty())THROW_EXP_ERROR;
                 Expression* rhs=exp_stack.top();
                 exp_stack.pop();
-                if(exp_stack.empty())throw Parse_Exception(EXP_ERROR);
+                if(exp_stack.empty())THROW_EXP_ERROR;
                 Expression*lhs=exp_stack.top();
                 exp_stack.pop();
                 Expression* compound=new CompoundExp(lhs,rhs,optoken_to_string(top_op));
@@ -358,7 +374,7 @@ void parse_exp(bool minus_is_valid){
         }
     }
     else if(token_t==EXPO)op_stack.emplace(token_t);
-    else throw Parse_Exception(EXP_ERROR);
+    else THROW_EXP_ERROR;
 
     parse_exp(false);
 
@@ -372,14 +388,14 @@ void parse_exp1(bool minus_is_valid){
         parse_exp(true);
         token_t=code_scanner();
         if(token_t==')'){
-            if(op_stack.empty())throw Parse_Exception(EXP_ERROR);
+            if(op_stack.empty())THROW_EXP_ERROR;
             int top_op=op_stack.top();
             while(top_op!='('){
                 op_stack.pop();
-                if(exp_stack.empty())throw Parse_Exception(EXP_ERROR);
+                if(exp_stack.empty())THROW_EXP_ERROR;
                 Expression* rhs=exp_stack.top();
                 exp_stack.pop();
-                if(exp_stack.empty())throw Parse_Exception(EXP_ERROR);
+                if(exp_stack.empty())THROW_EXP_ERROR;
                 Expression*lhs=exp_stack.top();
                 exp_stack.pop();
                 Expression* compound=new CompoundExp(lhs,rhs,optoken_to_string(top_op));
@@ -389,7 +405,7 @@ void parse_exp1(bool minus_is_valid){
             op_stack.pop();
             return;
         }
-        else throw Parse_Exception(EXP_ERROR);
+        else THROW_EXP_ERROR;
     }
     if(token_t==NUM){
         code_scanner();
@@ -399,6 +415,8 @@ void parse_exp1(bool minus_is_valid){
     }
     if(token_t==ID){
         code_scanner();
+        if(type_inference.find(token_attr.id)==type_inference.end())
+            throw Parse_Exception("Parse Error: Use undefined variable!");
         Expression* id=new IdentifierExp(token_attr.id);
         exp_stack.emplace(id);
         return;
@@ -406,7 +424,7 @@ void parse_exp1(bool minus_is_valid){
     //negative number
     if(token_t=='-'){
         code_scanner();
-        if(!minus_is_valid)throw Parse_Exception(EXP_ERROR);//minus position error
+        if(!minus_is_valid)THROW_EXP_ERROR;//minus position error
         token_t=lookahead1();
         if(token_t==NUM){
             code_scanner();
@@ -415,8 +433,8 @@ void parse_exp1(bool minus_is_valid){
             return;
         }
         //not a negative number, error parsing
-        else throw Parse_Exception(EXP_ERROR);
+        else THROW_EXP_ERROR;
     }
-    throw Parse_Exception(EXP_ERROR);
+    THROW_EXP_ERROR;
 }
 

@@ -76,9 +76,9 @@ string PrintFStatement::to_ast() const{
     string tab="";
     string args_str="";
     for(auto &arg:args){
-        args_str.append(arg->to_ast(tab));
+        args_str.append(arg->to_ast(tab)+"\n");
     }
-    return to_string(line)+" PRINTF "+exp->to_ast(tab)+" "+args_str+"\n";
+    return to_string(line)+" PRINTF "+exp->to_ast(tab)+"\n"+args_str+"\n";
 }
 
 
@@ -128,10 +128,10 @@ Statement* IFStatement::eval(EvalContext &state) const{
     int right=exp2->eval_int(state);
 
     bool comp=false;
-    if(op=="<")comp=left<right;
-    else if(op==">")comp=left>right;
-    else if(op=="=")comp=left==right;
+    if(op=="<")comp=(left<right);
+    else if(op==">")comp=(left>right);
+    else if(op=="=")comp=(left==right);
 
-    if(comp)return next;
+    if(!comp)return next;
     else return program.get(goto_line);
 }
