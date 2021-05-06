@@ -5,7 +5,7 @@
 #define EXP_ERROR "Parse Error: LINE "+to_string(cur_line)+", expression is illegal!"
 
 //when parse error happen, add line to the highlights
-QList<QPair<unsigned int,QColor>> highlights;
+extern QList<QPair<unsigned int,QColor>> highlights;
 extern unsigned int pcur;//for the highlights
 
 static Statement*pre=NULL;
@@ -35,6 +35,7 @@ void init_for_parse(){
 
 
 void parse(){
+    parse_error_flag=false;
     init_for_parse();
     while(true){
         int token_t=code_scanner();
@@ -67,22 +68,26 @@ void parse_statement(int line){
     else if(token_t==PRINT){
         parse_exp();
         Expression*ret =get_parse_exp();
+        if(ret->type()==ConstantStr||ret->type()==CompoundStr)
+            throw Parse_Exception("Parse Error: LINE "+to_string(line)+", It is not allowed to PRINT a STR type!");
         Statement* stmt=new PrintStatement(ret,line);
         if(pre)pre->set_next(stmt);
         program.insert(line,stmt);
         pre=stmt;
     }
     else if(token_t==INPUT){
-        token_t=code_scanner();
+        token_t=lookahead1();
         if(token_t!=ID)throw Parse_Exception("Parse Error: LINE "+to_string(line)+", ID should follow INPUT!");
+        code_scanner();
         Statement* stmt=new InputStatement(token_attr.id,line);
         if(pre)pre->set_next(stmt);
         program.insert(line,stmt);
         pre=stmt;
     }
     else if(token_t==GOTO){
-        token_t=code_scanner();
+        token_t=lookahead1();
         if(token_t!=NUM)throw Parse_Exception("Parse Error: LINE "+to_string(line)+", NUM should follow INPUT!");
+        code_scanner();
         Statement* stmt=new GotoStatement(token_attr.num,line);
         if(pre)pre->set_next(stmt);
         program.insert(line,stmt);
@@ -91,18 +96,21 @@ void parse_statement(int line){
     else if(token_t==IF){
         parse_exp();
         Expression* rhs=get_parse_exp();
-        token_t=code_scanner();
+        token_t=lookahead1();
         if(!(token_t=='<'||token_t=='='||token_t=='>'))
             throw Parse_Exception("Parse Error: LINE "+to_string(line)+", operator is illegal!");
+        code_scanner();
         string op=optoken_to_string(token_t);
         parse_exp();
         Expression* lhs=get_parse_exp();
-        token_t=code_scanner();
+        token_t=lookahead1();
         if(token_t!=THEN)
             throw Parse_Exception("Parse Error: LINE "+to_string(line)+", expecting the 'THEN'!");
-        token_t=code_scanner();
+        code_scanner();
+        token_t=lookahead1();
         if(token_t!=NUM)
             throw Parse_Exception("Parse Error: LINE "+to_string(line)+", expecting the 'NUM'!");
+        code_scanner();
         Statement* stmt=new IFStatement(lhs,rhs,op,token_attr.num,line);
         if(pre)pre->set_next(stmt);
         program.insert(line,stmt);

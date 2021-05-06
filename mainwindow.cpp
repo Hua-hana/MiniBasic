@@ -58,6 +58,18 @@ bool emptycmd(QString &str){
     else return false;
 }
 
+void remove_line_syntax(Ui::MainWindow* ui,QTextCursor cursor){
+    auto code=ui->codeDisplay;
+    cursor.movePosition(QTextCursor::EndOfLine);
+    int loc=0;
+    for(auto &format:extras){
+        if(format.cursor==cursor)format.format.clearBackground();
+        loc++;
+    }
+    code->setExtraSelections(extras);
+}
+
+
 //insert a cmd in codeDisplay
 //error do nothing
 void insert_cmd(Ui::MainWindow* ui,QString& str){
@@ -88,9 +100,11 @@ void insert_cmd(Ui::MainWindow* ui,QString& str){
     if(replace){
         //remove the current line
         cursor.movePosition(QTextCursor::Down,QTextCursor::MoveAnchor,high);
+        remove_line_syntax(ui,cursor);
         cursor.select(QTextCursor::LineUnderCursor);
         cursor.removeSelectedText();
         cursor.deleteChar();
+        //auto code_str_debug=ui->codeDisplay->toPlainText().toStdString();
         ui->codeDisplay->setTextCursor(cursor);
         if(!empty_cmd)ui->codeDisplay->insertPlainText(str);
     }
@@ -262,6 +276,7 @@ string var_input(Ui::MainWindow*ui){
 }
 
 void syntax_highlight(Ui::MainWindow*ui){
+    extras.clear();
     QTextBrowser *code=ui->codeDisplay;
     QTextCursor cursor(code->document());
     for(auto &line:highlights){
@@ -308,6 +323,7 @@ void ExecThread::run(){
         program.generate_ast();
         emit send_res_output(e.str);
         emit send_ast(ast);
+        syntax_highlight(ui);
         return;
     }
 
@@ -395,6 +411,7 @@ void DebugThread::run(){
             //display the error message in resDisplay
             emit send_res_output(e.str);
             emit send_ast(ast);
+            syntax_highlight(ui);
             return;
         }
     }
