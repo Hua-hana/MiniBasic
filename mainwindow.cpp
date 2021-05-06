@@ -10,6 +10,7 @@
 #include<ExecThread.h>
 #include <QWaitCondition>
 #include <QMutex>
+#include<QMessageBox>
 #include"exception.h"
 std::string code_text;
 
@@ -58,7 +59,7 @@ bool emptycmd(QString &str){
     else return false;
 }
 
-void remove_line_syntax(Ui::MainWindow* ui,QTextCursor cursor){
+void syntax_highlights_remove_cursor(Ui::MainWindow* ui,QTextCursor cursor){
     auto code=ui->codeDisplay;
     cursor.movePosition(QTextCursor::EndOfLine);
     int loc=0;
@@ -95,26 +96,48 @@ void insert_cmd(Ui::MainWindow* ui,QString& str){
     //init the cursor
     auto cursor=ui->codeDisplay->textCursor();
     cursor.movePosition(QTextCursor::Start);
+    //move to the inserted line
+    cursor.movePosition(QTextCursor::Down,QTextCursor::MoveAnchor,high);
 
     //replace or delete
     if(replace){
         //remove the current line
-        cursor.movePosition(QTextCursor::Down,QTextCursor::MoveAnchor,high);
-        remove_line_syntax(ui,cursor);
+        syntax_highlights_remove_cursor(ui,cursor);
         cursor.select(QTextCursor::LineUnderCursor);
         cursor.removeSelectedText();
         cursor.deleteChar();
         //auto code_str_debug=ui->codeDisplay->toPlainText().toStdString();
         ui->codeDisplay->setTextCursor(cursor);
-        if(!empty_cmd)ui->codeDisplay->insertPlainText(str);
-    }
+        if(!empty_cmd){
+            ui->codeDisplay->insertPlainText(str);
+        }
+    }   
     else if(!empty_cmd){
-        cursor.movePosition(QTextCursor::Down,QTextCursor::MoveAnchor,high);
         ui->codeDisplay->setTextCursor(cursor);
         ui->codeDisplay->insertPlainText(str);
     }
 }
 
+QTextCursor search_line_cursor(Ui::MainWindow* ui,int line){
+    int low=0;
+    int high=ui->codeDisplay->document()->blockCount()-1;
+    auto Displaydoc=ui->codeDisplay->document();
+    while(low<high){
+        int mid=(low+high)>>1;
+        QTextBlock midblock=Displaydoc->findBlockByNumber(mid);
+        QString str_mid=midblock.text();
+        int mid_line=getLineNum(str_mid);
+        if(line<mid_line)high=mid;
+        else if(line>mid_line)low=mid+1;
+        else {high=mid;break;}
+    }
+    //init the cursor
+    auto cursor=ui->codeDisplay->textCursor();
+    cursor.movePosition(QTextCursor::Start);
+    //move to the inserted line
+    cursor.movePosition(QTextCursor::Down,QTextCursor::MoveAnchor,high);
+    return cursor;
+}
 
 //enter a command the "enter key"
 //codeDisplay will be updated
@@ -193,6 +216,8 @@ void MainWindow::on_btnClearCode_clicked()
     ui->treeDisplay->clear();
     ui->codeDisplay->clear();
     ui->debugDisplay->clear();
+    highlights.clear();
+    extras.clear();
 }
 
 // load the code file
@@ -228,7 +253,15 @@ void MainWindow::on_btnRunCode_clicked()
         ui->resDisplay->clear();
         ui->treeDisplay->clear();
         ui->debugDisplay->clear();
-        program.set_debug(false);
+        /*begin of ui operation*/
+        program.clear();
+        extras.clear();
+        highlights.clear();
+        ui->btnLoadCode->setEnabled(true);
+        ui->btnClearCode->setEnabled(true);
+    }
+    else{
+        ui->treeDisplay->clear();
     }
     //if debug mode click the run, do not clear!
     ExecThread *thread=new ExecThread(NULL);
@@ -292,13 +325,40 @@ void syntax_highlight(Ui::MainWindow*ui){
     code->setExtraSelections(extras);
 }
 
+void syntax_highlight_remove_line(Ui::MainWindow*ui,int line){
+    auto code=ui->codeDisplay;
+    QList<QTextEdit::ExtraSelection> extra;
+    auto cursor=search_line_cursor(ui,line);
+    QTextEdit::ExtraSelection h;
+    h.cursor=cursor;
+    h.cursor.movePosition(QTextCursor::StartOfLine);
+    h.cursor.movePosition(QTextCursor::EndOfLine);
+    h.format.setProperty(QTextFormat::FullWidthSelection,true);
+    h.format.clearBackground();
+    extra.append(h);
+    code->setExtraSelections(extra);
+}
+
+void syntax_highlight_line(Ui::MainWindow*ui,int line){
+    auto code=ui->codeDisplay;
+    QList<QTextEdit::ExtraSelection> extra;
+    auto cursor=search_line_cursor(ui,line);
+    QTextEdit::ExtraSelection h;
+    h.cursor=cursor;
+    h.cursor.movePosition(QTextCursor::StartOfLine);
+    h.cursor.movePosition(QTextCursor::EndOfLine);
+    h.format.setProperty(QTextFormat::FullWidthSelection,true);
+    h.format.setBackground(QColor(100,255,100));
+    extra.append(h);
+    code->setExtraSelections(extra);
+}
 
 void ExecThread::run(){
+    if(program.is_debug()){
+        program.set_debug(false);
+        goto parse_finished;
+    }
 
-    /*begin of ui operation*/
-    program.clear();
-    extras.clear();
-    highlights.clear();
     //LET PRINT INPUT
     if(Exec_Immediate)code_text="1 "+cmd_for_immediate_exec.toStdString();
     else code_text=ui->codeDisplay->document()->toPlainText().toStdString();
@@ -327,6 +387,7 @@ void ExecThread::run(){
         return;
     }
 
+parse_finished:
     if(program.is_empty())return;
     program.generate_ast();
     emit send_ast(ast);
@@ -339,7 +400,6 @@ void ExecThread::run(){
     }
     emit send_curvar(program.generate_curvar());
     emit send_res_output(res_output);
-
 
 }
 
@@ -359,17 +419,19 @@ void MainWindow::set_curvar(string curvar){
     //because it regenerate every time, so it need to clear
     ui->debugDisplay->clear();
     QString str=QString::fromStdString(curvar);
-    ui->treeDisplay->insertPlainText(str);
+    ui->debugDisplay->insertPlainText(str);
 }
 
 //similar to on_btnRunCode_clicked
 void MainWindow::on_btnDebugStep_clicked()
 {
+    ui->btnLoadCode->setEnabled(false);
+    ui->btnClearCode->setEnabled(false);
     if(!program.is_debug()){
         ui->resDisplay->clear();
-        ui->treeDisplay->clear();
         ui->debugDisplay->clear();
     }
+    ui->treeDisplay->clear();
 
     DebugThread *thread=new DebugThread(NULL);
     connect(thread,&QThread::finished
@@ -380,6 +442,8 @@ void MainWindow::on_btnDebugStep_clicked()
             this,&MainWindow::set_ast);
     connect(thread,&DebugThread::send_curvar,
             this,&MainWindow::set_curvar);
+    connect(thread,&DebugThread::send_debug_message,
+            this,&MainWindow::debug_message);
     thread->set_ui(ui);
     thread->start();
 }
@@ -419,10 +483,19 @@ void DebugThread::run(){
 
     //program.generate_ast(); no need to generate
     //emit send_ast(ast);
+
     try {
-        program.exec();
+        int status=program.exec();
+        if(status==0){
+            //FIXME: may need to do more thing
+            emit send_debug_message("End of Debug.");
+            program.set_debug(false);
+            ui->btnLoadCode->setEnabled(true);
+            ui->btnClearCode->setEnabled(true);
+        }
     }
     catch(Exec_Exception e){
+        emit send_debug_message("Runtime Error!");
         emit send_res_output(e.str);
         return;
     }
@@ -431,4 +504,9 @@ void DebugThread::run(){
     emit send_curvar(program.generate_curvar());
     emit send_res_output(res_output);
 
+}
+
+void MainWindow::debug_message(std::string message){
+    QString str=QString::fromStdString(message);
+    QMessageBox::information(this,"Information",str,QMessageBox::Ok | QMessageBox::Cancel);
 }

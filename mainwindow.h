@@ -33,7 +33,16 @@ public slots:
     void set_ast(std::string ast);
 
     void set_curvar(std::string curvar);
+
+    void debug_message(std::string message);
+
 private:
     Ui::MainWindow *ui;
 };
+
+void syntax_highlight_remove_line(Ui::MainWindow*ui,int line);
+void syntax_highlight_line(Ui::MainWindow*ui,int line);
+
+
+
 #endif // MAINWINDOW_H

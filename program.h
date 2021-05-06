@@ -31,7 +31,7 @@ public:
     void set_debug(bool flag){debug=flag;}
     bool is_debug(){return debug;}
     Ui::MainWindow* get_ui(){return ui;}
-    void exec();
+    int exec();
     void generate_ast();
     string generate_curvar();
     void clear();

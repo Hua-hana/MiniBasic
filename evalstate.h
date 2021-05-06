@@ -37,7 +37,7 @@ public:
         return state_type.at(k);
     }
 
-    string show_variable(){
+    string show_variable() const{
         string ret="";
         for(auto &var:state_type){
             if(var.second==INT_TYPE){
