@@ -22,7 +22,7 @@ public:
     virtual string getIdentifierName()const=0;
     virtual Expression* getLHS()const=0;
     virtual Expression* getRHS()const=0;
-
+    virtual int type_check(map<string,int>&)const=0;
 };
 
 class ConstantExp: public Expression{
@@ -48,6 +48,8 @@ public:
     virtual Expression* getLHS()const{return NULL;}
     virtual Expression* getRHS()const{return NULL;}
     virtual string getIdentifierName()const{return "";}
+    virtual int type_check(map<string,int>&)const{return INT_TYPE;}
+
 };
 
 class ConstantStrExp: public Expression{
@@ -73,6 +75,7 @@ public:
     virtual Expression* getLHS()const{return NULL;}
     virtual Expression* getRHS()const{return NULL;}
     virtual string getIdentifierName()const{return "";}
+    virtual int type_check(map<string,int>&)const{return STR_TYPE;}
 };
 
 class IdentifierExp:public Expression{
@@ -102,6 +105,11 @@ public:
     virtual Expression* getLHS()const{return NULL;}
     virtual Expression* getRHS()const{return NULL;}
     virtual string getIdentifierName()const{return id;}
+    virtual int type_check(map<string,int>&infer)const{
+        if(infer.find(id)==infer.end()||infer.at(id)==-1)
+            return -1;
+        return infer.at(id);
+    }
 };
 
 
@@ -131,6 +139,8 @@ public:
         return rhs;
     }
     virtual string getIdentifierName()const{return "";}
+    virtual int type_check(map<string,int>&)const;
+
 };
 
 
@@ -159,6 +169,7 @@ public:
         return rhs;
     }
     virtual string getIdentifierName()const{return "";}
+    virtual int type_check(map<string,int>&)const;
 };
 
 #endif // EXP_H

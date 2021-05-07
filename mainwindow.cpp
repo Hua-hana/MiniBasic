@@ -76,8 +76,8 @@ void insert_cmd(Ui::MainWindow* ui,QString& str){
     bool empty_cmd=false;
     empty_cmd=emptycmd(str); //empty command
     int line=getLineNum(str);
-    if(line==-1)throw Input_Exception("Input Error: no line number!");
-    if(line>1000000)throw Input_Exception("Input Error: line number is too large!");
+    if(line==-1)throw Input_Exception("Input Error: no line number!\n");
+    if(line>1000000)throw Input_Exception("Input Error: line number is too large!\n");
 
     int low=0;
     int high=ui->codeDisplay->document()->blockCount()-1;
@@ -200,7 +200,7 @@ void MainWindow::on_cmdLineEdit_blockCountChanged(int newBlockCount)
         catch(Input_Exception e){
             ui->resDisplay->insertPlainText(QString::fromStdString(e.str));
             prev_block_count++;
-            return;
+            continue;
         }
         prev_block_count++;
     }

@@ -24,6 +24,7 @@ public:
     virtual string to_ast()const=0;
     virtual Statement* eval(EvalContext &state)const=0;
     virtual StatementType type()const=0;
+    virtual int type_check(map<string,int>&infer)const=0;
 };
 
 class ErrorStatement:public Statement{
@@ -34,6 +35,9 @@ public:
     virtual string to_ast()const;
     virtual Statement* eval(EvalContext &)const{return next;}
     virtual StatementType type()const{return Err;};
+    virtual int type_check(map<string,int>&)const{
+        return 0;
+    }
 };
 
 
@@ -46,6 +50,9 @@ public:
     virtual string to_ast()const;
     virtual Statement* eval(EvalContext &)const{return next;}
     virtual StatementType type()const{return Rem;}
+    virtual int type_check(map<string,int>&)const{
+        return 0;
+    }
 };
 
 class LetStatement:public Statement{
@@ -57,6 +64,7 @@ public:
     virtual string to_ast()const;
     virtual Statement* eval(EvalContext &)const;
     virtual StatementType type()const{return Let;}
+    virtual int type_check(map<string,int>&)const;
 };
 
 class PrintStatement:public Statement{
@@ -69,6 +77,8 @@ public:
     virtual string to_ast()const;
     virtual Statement* eval(EvalContext &)const;
     virtual StatementType type()const{return Print;}
+    virtual int type_check(map<string,int>&)const;
+
 };
 
 class PrintFStatement:public Statement{
@@ -82,6 +92,7 @@ public:
     virtual string to_ast()const;
     virtual Statement* eval(EvalContext &)const;
     virtual StatementType type()const{return Print;}
+    virtual int type_check(map<string,int>&)const;
 };
 
 class InputStatement:public Statement{
@@ -93,6 +104,9 @@ public:
     virtual string to_ast()const;
     virtual Statement* eval(EvalContext &state)const;
     virtual StatementType type()const{return Input;}
+    virtual int type_check(map<string,int>&)const{
+        return 0;
+    }
 };
 
 class InputStrStatement:public Statement{
@@ -104,6 +118,9 @@ public:
     virtual string to_ast()const;
     virtual Statement* eval(EvalContext &state)const;
     virtual StatementType type()const{return Input;}
+    virtual int type_check(map<string,int>&)const{
+        return 0;
+    }
 };
 
 class GotoStatement:public Statement{
@@ -115,6 +132,7 @@ public:
     virtual string to_ast()const;
     virtual Statement* eval(EvalContext &)const;
     virtual StatementType type()const{return Goto;}
+    virtual int type_check(map<string,int>&)const{return 0;}
 };
 
 class IFStatement:public Statement{
@@ -129,6 +147,7 @@ public:
     virtual string to_ast()const;
     virtual Statement* eval(EvalContext &)const;
     virtual StatementType type()const{return If;}
+    virtual int type_check(map<string,int>&)const;
 };
 
 class EndStatement:public Statement{
@@ -139,6 +158,7 @@ public:
     virtual string to_ast()const{return to_string(line)+" END\n";}
     virtual Statement* eval(EvalContext&)const{return NULL;}
     virtual StatementType type()const{return End;}
+    virtual int type_check(map<string,int>&)const{return 0;}
 };
 
 

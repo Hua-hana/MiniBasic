@@ -1,0 +1,4 @@
+100 LET n1="hahaha"
+110 LET n2=3+n1
+120 LET n3=n1+n1
+130 LET n4=n1*2

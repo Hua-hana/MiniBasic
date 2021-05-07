@@ -1,0 +1,3 @@
+100 LET n1="hahaha"
+110 PRINTF "n1+3={}?",n1+3
+120 PRINTF "n1+n1+n1={}?",n1+n1+n1

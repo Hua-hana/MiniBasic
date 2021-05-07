@@ -23,10 +23,21 @@ Statement* LetStatement::eval(EvalContext &state) const{
     return next;
 }
 
+int LetStatement::type_check(map<string, int> &infer) const{
+    auto type=exp->type_check(infer);
+    if(type==-1)return -1;
+    return type;
+}
+
 Statement* PrintStatement::eval(EvalContext &state) const{
     int ans=exp->eval_int(state);
     res_output.append(to_string(ans)+"\n");
     return next;
+}
+
+int PrintStatement::type_check(map<string, int> &infer) const{
+    if(exp->type_check(infer)!=INT_TYPE)return -1;
+    return INT_TYPE;
 }
 
 string PrintStatement::to_ast() const{
@@ -81,6 +92,13 @@ string PrintFStatement::to_ast() const{
     return to_string(line)+" PRINTF "+exp->to_ast(tab)+"\n"+args_str+"\n";
 }
 
+int PrintFStatement::type_check(map<string, int> &infer) const{
+    for(auto &exp:args){
+        if(exp->type_check(infer)==-1)return -1;
+    }
+    return 0;
+}
+
 
 string InputStatement::to_ast() const{
     return to_string(line)+" INPUT "+id+"\n";
@@ -123,7 +141,6 @@ string IFStatement::to_ast() const{
 }
 
 Statement* IFStatement::eval(EvalContext &state) const{
-
     int left=exp1->eval_int(state);
     int right=exp2->eval_int(state);
 
@@ -134,4 +151,10 @@ Statement* IFStatement::eval(EvalContext &state) const{
 
     if(!comp)return next;
     else return program.get(goto_line);
+}
+
+int IFStatement::type_check(map<string, int> &infer) const{
+    if(exp1->type_check(infer)!=INT_TYPE||exp2->type_check(infer)!=INT_TYPE)
+        return -1;
+    return 0;
 }

@@ -12,6 +12,7 @@ map<string,int> type_inference;
 static Statement*pre=NULL;
 
 void parse_statement(int);
+
 void parse_exp(bool minus_is_valid=true);
 void parse_exp1(bool minus_is_valid=true);
 Expression* get_parse_exp();
@@ -68,6 +69,8 @@ void parse_statement(int line){
     else if(token_t==LET){
         Expression* ret=parse_assign();
         Statement* stmt=new LetStatement(ret,line);
+        auto type=stmt->type_check(type_inference);
+        if(type==-1)throw Parse_Exception("Type Error: LET statement type error!");
         if(pre)pre->set_next(stmt);
         program.insert(line,stmt);
         pre=stmt;
@@ -78,6 +81,8 @@ void parse_statement(int line){
         if(ret->type()==ConstantStr||ret->type()==CompoundStr)
             throw Parse_Exception("Parse Error: LINE "+to_string(line)+", It is not allowed to PRINT a STR type!");
         Statement* stmt=new PrintStatement(ret,line);
+        auto type=stmt->type_check(type_inference);
+        if(type==-1)throw Parse_Exception("Type Error: PRINT statement type error!");
         if(pre)pre->set_next(stmt);
         program.insert(line,stmt);
         pre=stmt;
@@ -120,6 +125,8 @@ void parse_statement(int line){
             throw Parse_Exception("Parse Error: LINE "+to_string(line)+", expecting the 'NUM'!");
         code_scanner();
         Statement* stmt=new IFStatement(lhs,rhs,op,token_attr.num,line);
+        auto type=stmt->type_check(type_inference);
+        if(type==-1)throw Parse_Exception("Type Error: IF statement type error!");
         if(pre)pre->set_next(stmt);
         program.insert(line,stmt);
         pre=stmt;
@@ -146,6 +153,8 @@ void parse_statement(int line){
             token_t=lookahead1();
         }
         Statement* stmt=new PrintFStatement(format,args,line);
+        auto type=stmt->type_check(type_inference);
+        if(type==-1)throw Parse_Exception("Type Error: PRINTF statement type error!");
         if(pre)pre->set_next(stmt);
         program.insert(line,stmt);
         pre=stmt;
