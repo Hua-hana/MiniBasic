@@ -1,4 +1,5 @@
 # A MiniBasic Interpreter
+**(Course project for SE2322-Advanced Data Structure)** 
 
 <img src=./pic/demo.png width=60%>
 
