@@ -19,6 +19,7 @@ int Program::exec(){
         debug_cur=nullptr;
 
         while(cur){
+            if(cur->type()==Err)throw Exec_Exception("There is syntax error in this line!");
             auto next=cur->eval(state);
             cur=next;
             emit run_thread->send_curvar(generate_curvar());

@@ -264,6 +264,7 @@ void MainWindow::on_btnRunCode_clicked()
     }
     //if debug mode click the run, do not clear!
     ExecThread *thread=new ExecThread(NULL);
+    program.set_run_thread(thread);
     connect(thread,&QThread::finished
                 ,thread,&QObject::deleteLater);
     connect(thread,&ExecThread::send_res_output,
@@ -272,9 +273,10 @@ void MainWindow::on_btnRunCode_clicked()
             this,&MainWindow::set_ast);
     connect(thread,&ExecThread::send_curvar,
             this,&MainWindow::set_curvar);
+    connect(thread,&ExecThread::send_debug_message,
+            this,&MainWindow::debug_message);
     thread->set_ui(ui);
     thread->start();
-
     //parse
     //exec
     //set output
@@ -381,7 +383,6 @@ void ExecThread::run(){
     pcur=0;
     //set the ui in program
     program.set_ui(ui);
-    program.set_run_thread(this);
     //set the debug flag
     program.set_debug(false);
     st=CMDING;
@@ -410,7 +411,10 @@ parse_finished:
         program.exec();
     }
     catch(Exec_Exception e){
+        emit send_debug_message(e.str);
         emit send_res_output(e.str);
+        ui->btnLoadCode->setEnabled(true);
+        ui->btnClearCode->setEnabled(true);
         return;
     }
     //emit send_curvar(program.generate_curvar());
@@ -449,6 +453,7 @@ void MainWindow::on_btnDebugStep_clicked()
     ui->treeDisplay->clear();
 
     DebugThread *thread=new DebugThread(NULL);
+    program.set_debug_thread(thread);
     connect(thread,&QThread::finished
                 ,thread,&QObject::deleteLater);
     connect(thread,&DebugThread::send_res_output,
@@ -461,6 +466,7 @@ void MainWindow::on_btnDebugStep_clicked()
             this,&MainWindow::debug_message);
     thread->set_ui(ui);
     thread->start();
+
 }
 
 //mostly the same as ExecThread::run, do one time parsing
@@ -497,9 +503,7 @@ void DebugThread::run(){
 //            return;
         }
     }
-    //attention! every time it would generate a new thread!
-    //this pointer is different!
-    program.set_debug_thread(this);
+
 
     if(program.is_empty()){
         program.set_debug(false);

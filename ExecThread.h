@@ -12,6 +12,7 @@ signals:
     void send_res_output(string);
     void send_ast(string);
     void send_curvar(string);
+    void send_debug_message(string);
 public:
     ExecThread(QObject* par):QThread(par){}
     ~ExecThread(){}
