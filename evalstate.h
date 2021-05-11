@@ -16,12 +16,16 @@ public:
     EvalContext(){}
     ~EvalContext(){}
     void add(const string &k,int v){
-        state_type.insert_or_assign(k,INT_TYPE);
-        state_int.insert_or_assign(k,v);
+//        state_type.insert_or_assign(k,INT_TYPE);
+//        state_int.insert_or_assign(k,v);
+        state_type[k]=INT_TYPE;
+        state_int[k]=v;
     }
     void add(const string &k,string& v){
-        state_type.insert_or_assign(k,STR_TYPE);
-        state_str.insert_or_assign(k,v);
+//        state_type.insert_or_assign(k,STR_TYPE);
+//        state_str.insert_or_assign(k,v);
+        state_type[k]=STR_TYPE;
+        state_str[k]=v;
     }
     int get_int(const string& k) const{
         return state_int.at(k);

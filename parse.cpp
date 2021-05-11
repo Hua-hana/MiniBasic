@@ -91,7 +91,7 @@ void parse_statement(int line){
         token_t=lookahead1();
         if(token_t!=ID)throw Parse_Exception("Parse Error: LINE "+to_string(line)+", ID should follow INPUT!");
         code_scanner();
-        type_inference.insert_or_assign(token_attr.id,INT_TYPE);
+        type_inference[token_attr.id]=INT_TYPE;
         Statement* stmt=new InputStatement(token_attr.id,line);
         if(pre)pre->set_next(stmt);
         program.insert(line,stmt);
@@ -162,7 +162,7 @@ void parse_statement(int line){
     else if(token_t==INPUTS){
         token_t=code_scanner();
         if(token_t!=ID)throw Parse_Exception("Parse Error: LINE "+to_string(line)+", ID should follow INPUTS!");
-        type_inference.insert_or_assign(token_attr.id,STR_TYPE);
+        type_inference[token_attr.id]=STR_TYPE;
         Statement* stmt=new InputStrStatement(token_attr.id,line);
         if(pre)pre->set_next(stmt);
         program.insert(line,stmt);
@@ -217,11 +217,11 @@ Expression* parse_assign(){
             Expression* ret;
             //if the rhs is a string
             if(token_t!=STR){
-                type_inference.insert_or_assign(id,INT_TYPE);
+                type_inference[id]=INT_TYPE;
                 ret=new CompoundExp(lhs,rhs,op);
             }
             else {
-                type_inference.insert_or_assign(id,STR_TYPE);
+                type_inference[id]=STR_TYPE;
                 ret=new CompoundStrExp(lhs,rhs,op);
             }
             return ret;
