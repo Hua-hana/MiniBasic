@@ -68,7 +68,7 @@ void Program::generate_ast(){
 
     auto cur=bitmap.begin()->second;
     while(cur){
-        if(!Exec_Immediate)ast+=cur->to_ast();
+        ast+=cur->to_ast();
         cur=cur->get_next();
     }
 }
@@ -91,6 +91,7 @@ void Program::clear(){
         Statement* del=iter.second;
         delete del;
     }
-    state.clear();
+    if(!Exec_Immediate)state.clear();
+    Exec_Immediate=false;
     bitmap.clear();
 }

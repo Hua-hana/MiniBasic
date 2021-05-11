@@ -378,7 +378,7 @@ void ExecThread::run(){
     //LET PRINT INPUT
     if(Exec_Immediate)code_text="1 "+cmd_for_immediate_exec.toStdString();
     else code_text=ui->codeDisplay->document()->toPlainText().toStdString();
-    Exec_Immediate=false;//click the run button and not exec the cmd_for_imm..._exec
+
     //initial the scanner;
     pcur=0;
     //set the ui in program
