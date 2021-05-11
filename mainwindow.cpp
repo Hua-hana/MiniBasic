@@ -253,9 +253,9 @@ void MainWindow::on_btnRunCode_clicked()
         ui->treeDisplay->clear();
         ui->debugDisplay->clear();
         /*begin of ui operation*/
-        program.clear();
-        extras.clear();
-        highlights.clear();
+    //        program.clear();
+//        extras.clear();
+//        highlights.clear();
         ui->btnLoadCode->setEnabled(true);
         ui->btnClearCode->setEnabled(true);
     }
@@ -399,7 +399,11 @@ void ExecThread::run(){
         program.generate_ast();
         emit send_res_output(e.str);
         emit send_ast(ast);
-        syntax_highlight(ui);
+        if(!Exec_Immediate)syntax_highlight(ui);
+        //clear program
+        program.clear();
+        extras.clear();
+        highlights.clear();
         return;
     }
 
@@ -408,18 +412,25 @@ parse_finished:
     program.generate_ast();
     emit send_ast(ast);
     try {
-        program.exec();
+        int status=program.exec();
+        if(status==0){
+            //may exit from debug mode
+            ui->btnLoadCode->setEnabled(true);
+            ui->btnClearCode->setEnabled(true);
+        }
     }
     catch(Exec_Exception e){
         emit send_debug_message(e.str);
         emit send_res_output(e.str);
         ui->btnLoadCode->setEnabled(true);
         ui->btnClearCode->setEnabled(true);
-        return;
     }
     //emit send_curvar(program.generate_curvar());
     //emit send_res_output(res_output);
-
+    //clear program
+    program.clear();
+    extras.clear();
+    highlights.clear();
 }
 
 //clear operation can be done in the runcode btn slot
@@ -474,9 +485,7 @@ void MainWindow::on_btnDebugStep_clicked()
 void DebugThread::run(){
     if(!program.is_debug()){
         //firstly enter debug mode
-        program.clear();
-        extras.clear();
-        highlights.clear();
+
 
         code_text=ui->codeDisplay->document()->toPlainText().toStdString();
         //initial the scanner;
@@ -501,6 +510,7 @@ void DebugThread::run(){
 //            ui->btnLoadCode->setEnabled(true);
 //            ui->btnClearCode->setEnabled(true);
 //            return;
+//            unable to clear
         }
     }
 
@@ -509,6 +519,10 @@ void DebugThread::run(){
         program.set_debug(false);
         ui->btnLoadCode->setEnabled(true);
         ui->btnClearCode->setEnabled(true);
+        //clear program
+        program.clear();
+        extras.clear();
+        highlights.clear();
         return;
     }
     //program.generate_ast(); no need to generate
@@ -522,6 +536,10 @@ void DebugThread::run(){
             program.set_debug(false);
             ui->btnLoadCode->setEnabled(true);
             ui->btnClearCode->setEnabled(true);
+            //clear program
+            program.clear();
+            extras.clear();
+            highlights.clear();
         }
     }
     catch(Exec_Exception e){
@@ -530,11 +548,16 @@ void DebugThread::run(){
         program.set_debug(false);
         ui->btnLoadCode->setEnabled(true);
         ui->btnClearCode->setEnabled(true);
+        //clear program
+        program.clear();
+        extras.clear();
+        highlights.clear();
         return;
     }
     //exec also generate ast for current code
     emit send_ast(ast);
     //emit send_curvar(program.generate_curvar());
+
 
 }
 
