@@ -72,12 +72,14 @@ void syntax_highlights_remove_cursor(Ui::MainWindow* ui,QTextCursor cursor){
 
 //insert a cmd in codeDisplay
 //error do nothing
-void insert_cmd(Ui::MainWindow* ui,QString& str){
+//0:correct -1:error
+int insert_cmd(Ui::MainWindow* ui,QString& str){
+    if(str==""||str=="\n")return 0;
     bool empty_cmd=false;
     empty_cmd=emptycmd(str); //empty command
     int line=getLineNum(str);
-    if(line==-1)throw Input_Exception("Input Error: no line number!\n");
-    if(line>1000000)throw Input_Exception("Input Error: line number is too large!\n");
+    if(line==-1)return -1;
+    if(line>1000000)return -1;
 
     int low=0;
     int high=ui->codeDisplay->document()->blockCount()-1;
@@ -115,6 +117,7 @@ void insert_cmd(Ui::MainWindow* ui,QString& str){
         ui->codeDisplay->setTextCursor(cursor);
         ui->codeDisplay->insertPlainText(str);
     }
+    return 0;
 }
 
 QTextCursor search_line_cursor(Ui::MainWindow* ui,int line){
@@ -196,12 +199,17 @@ void MainWindow::on_cmdLineEdit_blockCountChanged(int newBlockCount)
         }
 
         //insert cmd
-        try {insert_cmd(ui,str);}
-        catch(Input_Exception e){
-            ui->resDisplay->insertPlainText(QString::fromStdString(e.str));
-            prev_block_count++;
-            continue;
+        if(insert_cmd(ui,str)==-1){
+            ui->resDisplay->insertPlainText("Input Error!");
+            prev_block_count=newBlockCount;
+            return;
         }
+//        try {insert_cmd(ui,str);}
+//        catch(Input_Exception e){
+//            ui->resDisplay->insertPlainText(QString::fromStdString(e.str));
+//            prev_block_count=newBlockCount;
+//            return;
+//        }
         prev_block_count++;
     }
 }
