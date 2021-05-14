@@ -59,52 +59,38 @@ void parse(){
 void parse_statement(int line){
     int token_t=code_scanner();
     string error_str="";
+    Statement* stmt=nullptr;
     try{
     if(token_t==REM){
-        Statement* stmt=new RemStatement(token_attr.comment,line);
-        if(pre)pre->set_next(stmt);
-        program.insert(line,stmt);
-        pre=stmt;
+        stmt=new RemStatement(token_attr.comment,line);
     }
     else if(token_t==LET){
         Expression* ret=parse_assign();
-        Statement* stmt=new LetStatement(ret,line);
+        stmt=new LetStatement(ret,line);
         auto type=stmt->type_check(type_inference);
         if(type==-1)throw Parse_Exception("Type Error: LET statement type error!");
-        if(pre)pre->set_next(stmt);
-        program.insert(line,stmt);
-        pre=stmt;
     }
     else if(token_t==PRINT){
         parse_exp();
         Expression*ret =get_parse_exp();
         if(ret->type()==ConstantStr||ret->type()==CompoundStr)
             throw Parse_Exception("Parse Error: LINE "+to_string(line)+", It is not allowed to PRINT a STR type!");
-        Statement* stmt=new PrintStatement(ret,line);
+        stmt=new PrintStatement(ret,line);
         auto type=stmt->type_check(type_inference);
         if(type==-1)throw Parse_Exception("Type Error: PRINT statement type error!");
-        if(pre)pre->set_next(stmt);
-        program.insert(line,stmt);
-        pre=stmt;
     }
     else if(token_t==INPUT){
         token_t=lookahead1();
         if(token_t!=ID)throw Parse_Exception("Parse Error: LINE "+to_string(line)+", ID should follow INPUT!");
         code_scanner();
         type_inference[token_attr.id]=INT_TYPE;
-        Statement* stmt=new InputStatement(token_attr.id,line);
-        if(pre)pre->set_next(stmt);
-        program.insert(line,stmt);
-        pre=stmt;
+        stmt=new InputStatement(token_attr.id,line);
     }
     else if(token_t==GOTO){
         token_t=lookahead1();
         if(token_t!=NUM)throw Parse_Exception("Parse Error: LINE "+to_string(line)+", NUM should follow INPUT!");
         code_scanner();
-        Statement* stmt=new GotoStatement(token_attr.num,line);
-        if(pre)pre->set_next(stmt);
-        program.insert(line,stmt);
-        pre=stmt;
+        stmt=new GotoStatement(token_attr.num,line);
     }
     else if(token_t==IF){
         parse_exp();
@@ -124,18 +110,12 @@ void parse_statement(int line){
         if(token_t!=NUM)
             throw Parse_Exception("Parse Error: LINE "+to_string(line)+", expecting the 'NUM'!");
         code_scanner();
-        Statement* stmt=new IFStatement(lhs,rhs,op,token_attr.num,line);
+        stmt=new IFStatement(lhs,rhs,op,token_attr.num,line);
         auto type=stmt->type_check(type_inference);
         if(type==-1)throw Parse_Exception("Type Error: IF statement type error!");
-        if(pre)pre->set_next(stmt);
-        program.insert(line,stmt);
-        pre=stmt;
     }
     else if(token_t==END){
-        Statement *stmt=new EndStatement(line);
-        if(pre)pre->set_next(stmt);
-        program.insert(line,stmt);
-        pre=stmt;
+        stmt=new EndStatement(line);
     }
     //PRINTF "format",exp1,exp2...
     else if(token_t==PRINTF){
@@ -152,21 +132,20 @@ void parse_statement(int line){
             args.emplace_back(arg);
             token_t=lookahead1();
         }
-        Statement* stmt=new PrintFStatement(format,args,line);
+
+
+        stmt=new PrintFStatement(format,args,line);
         auto type=stmt->type_check(type_inference);
         if(type==-1)throw Parse_Exception("Type Error: PRINTF statement type error!");
-        if(pre)pre->set_next(stmt);
-        program.insert(line,stmt);
-        pre=stmt;
+
     }
     else if(token_t==INPUTS){
-        token_t=code_scanner();
+        token_t=lookahead1();
         if(token_t!=ID)throw Parse_Exception("Parse Error: LINE "+to_string(line)+", ID should follow INPUTS!");
+        code_scanner();
         type_inference[token_attr.id]=STR_TYPE;
-        Statement* stmt=new InputStrStatement(token_attr.id,line);
-        if(pre)pre->set_next(stmt);
-        program.insert(line,stmt);
-        pre=stmt;
+        stmt=new InputStrStatement(token_attr.id,line);
+
     }
     else throw Parse_Exception("Parse Error: LINE "+to_string(line)+", unrecognized command!");
     }
@@ -174,20 +153,28 @@ void parse_statement(int line){
         error_str=e.str;
         goto parse_error;
     }
-    //end of line is \n
+    //end of line is \n?
     token_t=lookahead1();
-    if(token_t!='\n'){error_str="something unexpected end of line";goto parse_error;}
+    if(token_t!='\n'){
+        error_str="something unexpected end of line";
+        delete stmt;
+        goto parse_error;
+    }
     else code_scanner();
 
+    //parse success
+    if(pre)pre->set_next(stmt);
+    program.insert(line,stmt);
+    pre=stmt;
     return;//if no error
 parse_error:
     //add to highlights
     highlights.emplace_back(QPair<int,QColor>(pcur,QColor(255,100,100)));
     skip_to_new_line();
-    Statement *stmt=new ErrorStatement(line,error_str);
-    if(pre)pre->set_next(stmt);
-    program.insert(line,stmt);
-    pre=stmt;
+    Statement *err_stmt=new ErrorStatement(line,error_str);
+    if(pre)pre->set_next(err_stmt);
+    program.insert(line,err_stmt);
+    pre=err_stmt;
     parse_error_flag=true;
 }
 

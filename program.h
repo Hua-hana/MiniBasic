@@ -24,7 +24,7 @@ public:
     Program(){debug=false;debug_cur=nullptr;}
     ~Program();
     void insert(int line,Statement* sta){
-        bitmap.insert(pair<int,Statement*>(line,sta));
+        bitmap[line]=sta;
     }
     Statement* get(int line){
         auto ret=bitmap.find(line);

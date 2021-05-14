@@ -6,12 +6,13 @@
 6 PRINTF "Your name is {}", name
 7 LET a = 2
 8 LET b = 4
-9 PRINTF "Please Input a Integer Between 0 to 22"
+9 PRINTF "Please Input a Integer Between 0 to 30"
 10 INPUT n
 11 IF n = 0 THEN 41
 12 IF n = 1 THEN 43
 13 IF n < 0 THEN 100
-14 IF n > 22 THEN 100
+15 LET a = 2
+16 LET b = 4
 17 LET i = 1
 20 LET tmp = 0
 21 IF i = n THEN 28

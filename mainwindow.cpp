@@ -200,7 +200,7 @@ void MainWindow::on_cmdLineEdit_blockCountChanged(int newBlockCount)
 
         //insert cmd
         if(insert_cmd(ui,str)==-1){
-            ui->resDisplay->insertPlainText("Input Error!");
+            ui->resDisplay->insertPlainText("Input Error!\n");
             prev_block_count=newBlockCount;
             return;
         }
@@ -298,19 +298,19 @@ string var_input(Ui::MainWindow*ui){
 
     ui->cmdLineEdit->insertPlainText("? ");
 
-    ui->btnClearCode->setEnabled(false);
-    ui->btnDebugStep->setEnabled(false);
-    ui->btnLoadCode->setEnabled(false);
-    ui->btnRunCode->setEnabled(false);
+//    ui->btnClearCode->setEnabled(false);
+//    ui->btnDebugStep->setEnabled(false);
+//    ui->btnLoadCode->setEnabled(false);
+//    ui->btnRunCode->setEnabled(false);
 
     mut.lock();
     cond.wait(&mut);
     mut.unlock();
 
-    ui->btnClearCode->setEnabled(true);
-    ui->btnDebugStep->setEnabled(true);
-    ui->btnLoadCode->setEnabled(true);
-    ui->btnRunCode->setEnabled(true);
+//    ui->btnClearCode->setEnabled(true);
+//    ui->btnDebugStep->setEnabled(true);
+//    ui->btnLoadCode->setEnabled(true);
+//    ui->btnRunCode->setEnabled(true);
 
     int curBlockCount=ui->cmdLineEdit->blockCount()-1;
     QTextDocument* doc=ui->cmdLineEdit->document();

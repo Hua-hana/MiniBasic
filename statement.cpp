@@ -78,6 +78,7 @@ Statement* PrintFStatement::eval(EvalContext &state) const{
         }
         ++i;
     }
+    if(args_p!=args.size())throw Exec_Exception("Runtime Error: mismatch for {} and arguments!");
     ans.append(format.substr(off,size-off));
     res_output.append(ans+"\n");
     return next;
@@ -89,7 +90,7 @@ string PrintFStatement::to_ast() const{
     for(auto &arg:args){
         args_str.append(arg->to_ast(tab)+"\n");
     }
-    return to_string(line)+" PRINTF "+exp->to_ast(tab)+"\n"+args_str+"\n";
+    return to_string(line)+" PRINTF "+exp->to_ast(tab)+"\n"+args_str;
 }
 
 int PrintFStatement::type_check(map<string, int> &infer) const{
